@@ -1,0 +1,39 @@
+# Python 缓存文件
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 生成的文件
+*.log
+*.pot
+*.pyc
+*.pyo
+
+# Django 的数据库文件
+db.sqlite3
+
+# Django 的 migrations 文件夹（如果你不希望版本控制迁移文件）
+/migrations/
+
+# 虚拟环境文件夹
+venv/
+env/
+.venv/
+.env/
+
+# 本地设置文件
+local_settings.py
+
+# PyCharm 和 VSCode 等IDE的配置文件
+.idea/
+.vscode/
+
+# 其他可能的IDE配置文件
+*.swp
+*.swo
+.DS_Store
+
+# 忽略 static 和 media 目录中的文件（可以根据需要启用）
+/static/
+/media/
