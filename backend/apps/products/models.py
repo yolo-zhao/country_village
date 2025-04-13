@@ -72,3 +72,33 @@ class ProductInquiry(models.Model):
 
     def __str__(self):
         return f"{self.name} 咨询了 {self.product.name}"
+
+class Cart(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, verbose_name='用户')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
+
+    class Meta:
+        verbose_name = '购物车'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return f"购物车 ({self.user if self.user else '未登录用户'})"
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE, verbose_name='购物车')
+    product = models.ForeignKey('products.Product', on_delete=models.CASCADE, verbose_name='商品')
+    quantity = models.PositiveIntegerField(default=1, verbose_name='数量')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
+
+    class Meta:
+        verbose_name = '购物车商品项'
+        verbose_name_plural = verbose_name
+        unique_together = ('cart', 'product')  # 同一个购物车中，每个商品只能有一项
+
+    def __str__(self):
+        return f"{self.product.name} x {self.quantity} (在 {self.cart} 中)"
+
+    def total_price(self):
+        return self.product.price * self.quantity

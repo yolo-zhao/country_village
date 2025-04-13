@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Product, ProductImage, ProductInquiry
+from .models import Product, ProductImage, ProductInquiry,Cart,CartItem
 from .forms import ProductInquiryForm, CreateProductForm
 
 def product_list(request):
@@ -45,3 +45,63 @@ def create_product(request):
             return redirect('products:farmer_product_list')
 
     return render(request, 'products/create_product.html', {'form': form})
+#购物车的相关功能，添加，查看，删除
+@login_required(login_url='/users/login/')  # 需要用户登录才能操作购物车
+def add_to_cart(request, product_id):
+    product = get_object_or_404(Product, pk=product_id)
+    cart, created = Cart.objects.get_or_create(user=request.user)
+    cart_item, item_created = CartItem.objects.get_or_create(cart=cart, product=product)
+
+    if not item_created:
+        cart_item.quantity += 1
+        cart_item.save()
+
+    return redirect('products:product_detail', product_id=product_id) # 假设您有商品详情页
+
+@login_required(login_url='/users/login/')
+def view_cart(request):
+    cart = Cart.objects.filter(user=request.user).first()
+    cart_items = []
+    if cart:
+        cart_items = cart.items.all()
+    context = {'cart_items': cart_items}
+    return render(request, 'products/cart.html', context)
+
+@login_required(login_url='/users/login/')
+def update_cart_item(request, item_id):
+    if request.method == 'POST':
+        try:
+            cart_item = CartItem.objects.get(pk=item_id, cart__user=request.user)
+            quantity = int(request.POST.get('quantity', 1))
+            if quantity > 0:
+                cart_item.quantity = quantity
+                cart_item.save()
+            else:
+                cart_item.delete()
+            return redirect('products:view_cart')
+        except CartItem.DoesNotExist:
+            # 处理购物车项不存在的情况
+            pass
+    return redirect('products:view_cart')
+
+@login_required(login_url='/users/login/')
+def remove_from_cart(request, item_id):
+    try:
+        cart_item = CartItem.objects.get(pk=item_id, cart__user=request.user)
+        cart_item.delete()
+    except CartItem.DoesNotExist:
+        # 处理购物车项不存在的情况
+        pass
+    return redirect('products:view_cart')
+@login_required(login_url='/users/login/')
+def checkout(request):
+    cart = Cart.objects.filter(user=request.user).first()
+    cart_items = []
+    total_price = 0
+    if cart:
+        cart_items = cart.items.all()
+        for item in cart_items:
+            total_price += item.total_price()
+
+    context = {'cart_items': cart_items, 'total_price': total_price}
+    return render(request, 'products/checkout.html', context)
