@@ -2,12 +2,17 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.utils.translation import gettext_lazy as _
 
 class ActivityCategory(models.Model):
     """
     活动分类
     """
     name = models.CharField(max_length=100, unique=True)
+
+    class Meta:
+        verbose_name = _("活动分类")
+        verbose_name_plural = _("活动分类列表")
 
     def __str__(self):
         return self.name
@@ -17,6 +22,10 @@ class Tag(models.Model):
     活动标签 (可选)
     """
     name = models.CharField(max_length=50, unique=True)
+
+    class Meta:
+        verbose_name = _("标签")
+        verbose_name_plural = _("标签列表")
 
     def __str__(self):
         return self.name
@@ -39,6 +48,10 @@ class Activity(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name = _("活动")
+        verbose_name_plural = _("活动列表")
+
     def __str__(self):
         return self.title
 
@@ -55,6 +68,10 @@ class ActivityImage(models.Model):
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='activities/images/')
     caption = models.CharField(max_length=200, blank=True, null=True)
+
+    class Meta:
+        verbose_name = _("活动图片")
+        verbose_name_plural = _("活动图片列表")
 
     def __str__(self):
         return self.caption or self.image.name
@@ -80,6 +97,10 @@ class Reservation(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = _("预约")
+        verbose_name_plural = _("预约列表")
+
     def __str__(self):
         return f"{self.user.get_full_name() or self.user.username} 预约了 {self.activity.title} ({self.reservation_date})"
 
@@ -95,6 +116,10 @@ class ActivityReview(models.Model):
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = _("活动评价")
+        verbose_name_plural = _("活动评价列表")
+
     def __str__(self):
         return f"{self.user.get_full_name() or self.user.username} 对 {self.activity.title} 的评价"
 
@@ -108,6 +133,10 @@ class ActivityPhoto(models.Model):
     caption = models.CharField(max_length=200, blank=True, null=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = _("活动照片")
+        verbose_name_plural = _("活动照片列表")
+
     def __str__(self):
         return f"{self.user.get_full_name() or self.user.username} 上传的 {self.activity.title} 照片"
 
@@ -118,6 +147,10 @@ class ActivityCheckIn(models.Model):
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='check_ins')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activity_check_ins')
     check_in_time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("活动打卡")
+        verbose_name_plural = _("活动打卡记录")
 
     def __str__(self):
         return f"{self.user.get_full_name() or self.user.username} 在 {self.activity.title} 打卡"
@@ -133,6 +166,8 @@ class ActivityLike(models.Model):
     liked_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        verbose_name = _("活动点赞")
+        verbose_name_plural = _("活动点赞列表")
         unique_together = ('user', 'content_type', 'object_id')
 
 class ActivityComment(models.Model):
@@ -145,3 +180,7 @@ class ActivityComment(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("活动评论")
+        verbose_name_plural = _("活动评论列表")

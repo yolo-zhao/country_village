@@ -1,0 +1,16 @@
+INSERT INTO `products_product` (`name`, `slug`, `description`, `price`, `stock`, `created_at`, `updated_at`, `status`, `farmer_id`) VALUES
+('新鲜多汁草莓', 'caomei', '当季新鲜采摘的草莓，口感甜美，营养丰富。', 25.00, 100, NOW(), NOW(), 'published', 88),
+('有机绿色蔬菜礼盒', 'youji-shucai', '包含多种当季有机绿色蔬菜，健康营养，是您餐桌的首选。', 45.50, 50, NOW(), NOW(), 'published', 89),
+('农家散养土鸡蛋', 'tujidan', '农家散养的土鸡产的鸡蛋，蛋黄饱满，口感香醇。', 18.00, 200, NOW(), NOW(), 'published', 90),
+('香甜软糯红薯', 'hongshu', '自家种植的红薯，口感香甜软糯，富含膳食纤维。', 12.00, 150, NOW(), NOW(), 'published', 91),
+('优质新鲜玉米', 'yumi', '新鲜采摘的甜玉米，口感清甜，营养丰富。', 8.00, 180, NOW(), NOW(), 'published', 92),
+('天然野生蜂蜜', 'fengmi', '采自深山的天然野生蜂蜜，纯净无添加，口感香醇。', 68.00, 30, NOW(), NOW(), 'published', 93),
+('手工制作豆腐', 'doufu', '采用传统工艺手工制作的豆腐，口感细腻，营养丰富。', 10.00, 120, NOW(), NOW(), 'published', 94),
+('新鲜采摘蓝莓', 'lanmei', '新鲜采摘的蓝莓，富含花青素，口感酸甜可口。', 35.00, 80, NOW(), NOW(), 'published', 95),
+('农家自酿米酒', 'mijiu', '采用传统方法自酿的米酒，口感醇厚，回味甘甜。（请注意当地法律法规）', 55.00, 40, NOW(), NOW(), 'published', 96),
+('新鲜时令水果礼盒', 'shiling-shuiguo', '包含多种新鲜时令水果，品种丰富，送礼佳品。', 75.00, 25, NOW(), NOW(), 'published', 97),
+('原生态黑木耳', 'heimu''er', '生长在自然环境下的黑木耳，口感爽脆，营养丰富。', 30.00, 90, NOW(), NOW(), 'published', 98),
+('高山绿茶', 'lvcha', '采自高山的优质绿茶，口感清新，香气怡人。', 88.00, 60, NOW(), NOW(), 'published', 99),
+('农家自制辣椒酱', 'lajiaojiang', '采用新鲜辣椒和多种香料手工制作的辣椒酱，香辣可口。', 20.00, 110, NOW(), NOW(), 'published', 100),
+('新鲜采摘蘑菇', 'mogu', '新鲜采摘的蘑菇，口感鲜美，营养丰富。', 28.00, 70, NOW(), NOW(), 'published', 101),
+('五谷杂粮礼包', 'wugu-zaliang', '包含多种健康的五谷杂粮，营养均衡，适合全家食用。', 50.00, 35, NOW(), NOW(), 'published', 102);

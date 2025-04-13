@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.translation import gettext_lazy as _
 
 class Product(models.Model):
     """
@@ -24,6 +25,10 @@ class Product(models.Model):
         default='published'
     )
 
+    class Meta:
+        verbose_name = _("农特产品")
+        verbose_name_plural = _("农特产品列表")
+
     def __str__(self):
         return self.name
 
@@ -41,6 +46,10 @@ class ProductImage(models.Model):
     image = models.ImageField(upload_to='products/images/')
     caption = models.CharField(max_length=200, blank=True, null=True)
 
+    class Meta:
+        verbose_name = _("农特产品图片")
+        verbose_name_plural = _("农特产品图片列表")
+
     def __str__(self):
         return self.caption or self.image.name
 
@@ -56,6 +65,10 @@ class ProductInquiry(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     response = models.TextField(blank=True, null=True)
     responded_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = _("农特产品咨询")
+        verbose_name_plural = _("农特产品咨询列表")
 
     def __str__(self):
         return f"{self.name} 咨询了 {self.product.name}"
