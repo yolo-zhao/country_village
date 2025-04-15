@@ -1,10 +1,12 @@
-from django.urls import path
+from django.urls import path,include
 from . import views
+from rest_framework.routers import DefaultRouter
 
-app_name = 'core'
+router = DefaultRouter()
+router.register(r'announcements', views.SystemAnnouncementViewSet)
+
+# app_name = 'core'
 
 urlpatterns = [
-    path('', views.homepage, name='homepage'),
-    path('announcement/create/', views.create_announcement, name='create_announcement'),
-    # 您可能还需要编辑和删除公告的 URL
+    path('', include(router.urls)),
 ]

@@ -1,11 +1,20 @@
-from django.urls import path
+# backend/apps/activities/urls.py
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
 
-app_name = 'activities'
+router = DefaultRouter()
+router.register(r'activity-categories', views.ActivityCategoryViewSet)
+router.register(r'tags', views.TagViewSet)
+router.register(r'activities', views.ActivityViewSet)
+router.register(r'activity-images', views.ActivityImageViewSet)
+router.register(r'reservations', views.ReservationViewSet)
+router.register(r'activity-reviews', views.ActivityReviewViewSet)
+router.register(r'activity-photos', views.ActivityPhotoViewSet)
+router.register(r'activity-check-ins', views.ActivityCheckInViewSet)
+router.register(r'activity-likes', views.ActivityLikeViewSet)
+router.register(r'activity-comments', views.ActivityCommentViewSet)
 
 urlpatterns = [
-    path('', views.activity_list, name='activity_list'),
-    path('farmer/activities/', views.farmer_activity_list, name='farmer_activity_list'),
-    path('farmer/activities/create/', views.create_activity, name='create_activity'),
-    path('<int:activity_id>/', views.activity_detail, name='activity_detail'),
+    path('', include(router.urls)),
 ]

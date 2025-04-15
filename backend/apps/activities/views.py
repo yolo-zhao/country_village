@@ -1,87 +1,81 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from .models import Activity, ActivityCategory, ActivityReview, ActivityPhoto
-from .forms import ReservationForm, ActivityReviewForm, ActivityPhotoForm, CreateActivityForm
+# backend/apps/activities/views.py
+from rest_framework import viewsets, permissions
+from .models import ActivityCategory, Tag, Activity, ActivityImage, Reservation, ActivityReview, ActivityPhoto, ActivityCheckIn, ActivityLike, ActivityComment
+from .serializers import ActivityCategorySerializer, TagSerializer, ActivitySerializer, ActivityImageSerializer, ReservationSerializer, ActivityReviewSerializer, ActivityPhotoSerializer, ActivityCheckInSerializer, ActivityLikeSerializer, ActivityCommentSerializer
 
-def activity_list(request):
-    activities = Activity.objects.all()
-    categories = ActivityCategory.objects.all()
-    category_slug = request.GET.get('category')
-    if category_slug:
-        try:
-            category = ActivityCategory.objects.get(name=category_slug)
-            activities = activities.filter(category=category)
-        except ActivityCategory.DoesNotExist:
-            pass
-    context = {
-        'activities': activities,
-        'categories': categories,
-        'current_category': category_slug,
-    }
-    return render(request, 'activities/activity_list.html', context)
+class ActivityCategoryViewSet(viewsets.ModelViewSet):
+    queryset = ActivityCategory.objects.all()
+    serializer_class = ActivityCategorySerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-def activity_detail(request, activity_id):
-    activity = get_object_or_404(Activity, pk=activity_id)
-    reservation_form = ReservationForm()
-    review_form = ActivityReviewForm()
-    photo_form = ActivityPhotoForm()
-    reviews = ActivityReview.objects.filter(activity=activity).order_by('-created_at')
-    photos = ActivityPhoto.objects.filter(activity=activity).order_by('-uploaded_at')
+class TagViewSet(viewsets.ModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-    if request.method == 'POST':
-        if 'reserve' in request.POST:
-            reservation_form = ReservationForm(request.POST)
-            if reservation_form.is_valid():
-                reservation = reservation_form.save(commit=False)
-                reservation.activity = activity
-                reservation.user = request.user
-                reservation.save()
-                return redirect('activities:activity_detail', activity_id=activity.id) # 刷新页面或跳转到成功页面
-        elif 'review' in request.POST:
-            review_form = ActivityReviewForm(request.POST)
-            if review_form.is_valid():
-                review = review_form.save(commit=False)
-                review.activity = activity
-                review.user = request.user
-                review.save()
-                return redirect('activities:activity_detail', activity_id=activity.id)
-        elif 'photo' in request.POST:
-            photo_form = ActivityPhotoForm(request.POST, request.FILES)
-            if photo_form.is_valid():
-                photo = photo_form.save(commit=False)
-                photo.activity = activity
-                photo.user = request.user
-                photo.save()
-                return redirect('activities:activity_detail', activity_id=activity.id)
+class ActivityViewSet(viewsets.ModelViewSet):
+    queryset = Activity.objects.all()
+    serializer_class = ActivitySerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-    context = {
-        'activity': activity,
-        'reservation_form': reservation_form,
-        'review_form': review_form,
-        'photo_form': photo_form,
-        'reviews': reviews,
-        'photos': photos,
-    }
-    return render(request, 'activities/activity_detail.html', context)
+    def perform_create(self, serializer):
+        serializer.save(farmer=self.request.user)
 
-@login_required
-def farmer_activity_list(request):
-    activities = Activity.objects.filter(farmer=request.user)
-    return render(request, 'activities/farmer_activity_list.html', {'activities': activities})
+class ActivityImageViewSet(viewsets.ModelViewSet):
+    queryset = ActivityImage.objects.all()
+    serializer_class = ActivityImageSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-@login_required
-def create_activity(request):
-    if not hasattr(request.user, 'farmerprofile'):
-        return redirect('home') # 或者显示错误信息
+class ReservationViewSet(viewsets.ModelViewSet):
+    queryset = Reservation.objects.all()
+    serializer_class = ReservationSerializer
+    permission_classes = [permissions.IsAuthenticated] # 只有登录用户才能管理自己的预约
 
-    form = CreateActivityForm()
-    if request.method == 'POST':
-        form = CreateActivityForm(request.POST, request.FILES)
-        if form.is_valid():
-            activity = form.save(commit=False)
-            activity.farmer = request.user
-            activity.save()
-            form.save_m2m() # 保存多对多字段 (tags)
-            return redirect('activities:farmer_activity_list') # 跳转到农户活动列表
+    def get_queryset(self):
+        return Reservation.objects.filter(user=self.request.user)
 
-    return render(request, 'activities/create_activity.html', {'form': form})
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class ActivityReviewViewSet(viewsets.ModelViewSet):
+    queryset = ActivityReview.objects.all()
+    serializer_class = ActivityReviewSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class ActivityPhotoViewSet(viewsets.ModelViewSet):
+    queryset = ActivityPhoto.objects.all()
+    serializer_class = ActivityPhotoSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class ActivityCheckInViewSet(viewsets.ModelViewSet):
+    queryset = ActivityCheckIn.objects.all()
+    serializer_class = ActivityCheckInSerializer
+    permission_classes = [permissions.IsAuthenticated] # 只有登录用户才能创建打卡记录
+
+    def get_queryset(self):
+        return ActivityCheckIn.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class ActivityLikeViewSet(viewsets.ModelViewSet):
+    queryset = ActivityLike.objects.all()
+    serializer_class = ActivityLikeSerializer
+    permission_classes = [permissions.IsAuthenticated] # 只有登录用户才能点赞
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class ActivityCommentViewSet(viewsets.ModelViewSet):
+    queryset = ActivityComment.objects.all()
+    serializer_class = ActivityCommentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

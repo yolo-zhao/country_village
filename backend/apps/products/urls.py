@@ -1,19 +1,15 @@
-from django.urls import path
+# backend/apps/products/urls.py
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
 
-app_name = 'products'
+router = DefaultRouter()
+router.register(r'products', views.ProductViewSet)
+router.register(r'product-images', views.ProductImageViewSet)
+router.register(r'product-inquiries', views.ProductInquiryViewSet)
+router.register(r'carts', views.CartViewSet)
+router.register(r'cart-items', views.CartItemViewSet)
 
 urlpatterns = [
-    path('', views.product_list, name='product_list'),
-    path('farmer/products/', views.farmer_product_list, name='farmer_product_list'),
-    path('farmer/products/create/', views.create_product, name='create_product'),
-    path('<int:product_id>/', views.product_detail, name='product_detail'),
-    # 购物车相关的 URL
-    path('add-to-cart/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
-    path('cart/', views.view_cart, name='view_cart'),
-    path('update-cart-item/<int:item_id>/', views.update_cart_item, name='update_cart_item'),
-    path('remove-from-cart/<int:item_id>/', views.remove_from_cart, name='remove_from_cart'),
-
-    # 结账相关的 URL
-    path('checkout/', views.checkout, name='checkout'),
+    path('', include(router.urls)),
 ]

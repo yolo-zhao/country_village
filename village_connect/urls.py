@@ -22,12 +22,8 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # path('', include('core.urls')), # 包含 core 应用的 URL
-    # path('users/', include('users.urls')),
-    # path('activities/', include('activities.urls')),
-    # path('products/', include('products.urls')),
-    path('activities/', include('backend.apps.activities.urls')),
-    path('core/', include('backend.apps.core.urls')),
-    path('products/', include('backend.apps.products.urls')),
-    path('users/', include('backend.apps.users.urls')),
+    path('api/', include('backend.apps.users.urls')),  # 假设您的用户相关的 API
+    path('api/', include('backend.apps.products.urls')),  # 包含 products 应用的 API
+    path('api/', include('backend.apps.core.urls')),
+    path('api/', include('backend.apps.activities.urls')),
 ]
