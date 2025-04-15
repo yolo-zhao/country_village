@@ -53,7 +53,7 @@ class ActivityReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityReview
         fields = ['id', 'activity', 'user', 'rating', 'comment', 'created_at']
-        read_only_fields = ['id', 'created_at', 'activity', 'user']
+        read_only_fields = ['id', 'created_at', 'activity', 'user', 'auto_reply']
 
 class ActivityPhotoSerializer(serializers.ModelSerializer):
     activity = ActivitySerializer(read_only=True)
@@ -87,4 +87,4 @@ class ActivityCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityComment
         fields = ['id', 'user', 'content_type', 'object_id', 'text', 'created_at']
-        read_only_fields = ['id', 'created_at', 'user']
+        read_only_fields = ['id', 'created_at', 'user''auto_reply', 'content_type', 'object_id']

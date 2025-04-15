@@ -134,3 +134,7 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+DEEPSEEK_API_KEY = "sk-03de6896e8274332a28720cf7a72e28e"
+DEEPSEEK_API_URL = "https://api.deepseek.com"

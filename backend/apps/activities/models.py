@@ -115,6 +115,7 @@ class ActivityReview(models.Model):
     )
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    auto_reply = models.TextField(blank=True, null=True, verbose_name=_("自动回复"))
 
     class Meta:
         verbose_name = _("活动评价")
@@ -180,6 +181,7 @@ class ActivityComment(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    auto_reply = models.TextField(blank=True, null=True, verbose_name=_("自动回复"))
 
     class Meta:
         verbose_name = _("活动评论")
