@@ -3,29 +3,67 @@
 from rest_framework import viewsets, permissions, generics
 from django.contrib.auth.models import User
 from .models import TouristProfile, FarmerProfile
-from .serializers import UserSerializer, TouristProfileSerializer, FarmerProfileSerializer
+from .serializers import UserSerializer, TouristProfileSerializer, FarmerProfileSerializer, UserCreationSerializer
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import UserSerializer
+from rest_framework.authtoken.views import ObtainAuthToken # 导入 ObtainAuthToken 基类
+from rest_framework.authtoken.models import Token # 导入 Token 模型
 
 
 
 class RegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
-    serializer_class = UserSerializer  # 使用 UserSerializer 来创建用户
+    serializer_class = UserCreationSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        # 根据 role 创建对应的 Profile
         role = request.data.get('role', None)
         if role == 'tourist':
             TouristProfile.objects.create(user=user)
         elif role == 'farmer':
             FarmerProfile.objects.create(user=user)
         headers = self.get_success_headers(serializer.data)
-        return Response({'message': '注册成功'}, status=status.HTTP_201_CREATED, headers=headers)
+        return Response({'message': '注册成功',
+                         'user_id': user.id,
+                         'username': user.username,
+                         'role': role
+                         }, status=status.HTTP_201_CREATED, headers=headers)
+
+class CustomAuthToken(ObtainAuthToken):
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data,
+                                           context={'request': request})
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.validated_data['user']
+        token = serializer.validated_data['token']
+
+        role = None
+        if user.is_superuser or user.is_staff:
+             role = 'admin'
+        if role is None:
+            try:
+                if hasattr(user, 'touristprofile') and user.touristprofile is not None:
+                    role = 'tourist'
+                elif hasattr(user, 'farmerprofile') and user.farmerprofile is not None:
+                    role = 'farmer'
+
+            except (TouristProfile.DoesNotExist, FarmerProfile.DoesNotExist):
+                pass
+
+        return Response({
+            'token': token.key, # 返回 Token 字符串
+            'user_id': user.pk, # 返回用户 ID
+            'username': user.username, # 返回用户名
+            'role': role, # <-- 将判断出的角色信息添加到响应中
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+        }, status=status.HTTP_200_OK) # 登录成功返回 200 OK
+
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -45,10 +83,10 @@ class TouristProfileViewSet(viewsets.ModelViewSet):
 
 
     def get_queryset(self):
-        """
-        确保用户只能看到和修改自己的 TouristProfile。
-        """
-        return TouristProfile.objects.filter(user=self.request.user)
+        if self.request.user.is_authenticated:
+            return TouristProfile.objects.filter(user=self.request.user)
+        return TouristProfile.objects.none()
+
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -64,10 +102,9 @@ class FarmerProfileViewSet(viewsets.ModelViewSet):
 
 
     def get_queryset(self):
-        """
-        确保用户只能看到和修改自己的 FarmerProfile。
-        """
-        return FarmerProfile.objects.filter(user=self.request.user)
+        if self.request.user.is_authenticated:
+            return FarmerProfile.objects.filter(user=self.request.user)
+        return FarmerProfile.objects.none()
 
 
     def perform_create(self, serializer):

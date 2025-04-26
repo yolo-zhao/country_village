@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'rest_framework',
     'simpleui',
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,9 +44,11 @@ INSTALLED_APPS = [
     'backend.apps.users',
     'backend.apps.activities',
     'backend.apps.products',
+
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -138,3 +141,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 DEEPSEEK_API_KEY = "sk-03de6896e8274332a28720cf7a72e28e"
 DEEPSEEK_API_URL = "https://api.deepseek.com"
+
+
+CORS_ALLOW_ALL_ORIGINS = True
