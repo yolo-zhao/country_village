@@ -1,29 +1,44 @@
 import axios from 'axios';
+const API_BASE_URL = 'http://localhost:8000/api/';
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api'; // 你的 Django API 前缀
+const touristApi = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-const touristApiService = {
+export default {
   async getActivities() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/activities/`);
+      const response = await touristApi.get('/activities/'); // 示例路径
       return response.data;
     } catch (error) {
-      console.error('获取 activities 失败:', error);
-      return [];
+      console.error('Error fetching activities:', error);
+      throw error;
     }
   },
 
   async getProducts() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/products/`);
+      const response = await touristApi.get('/products/'); // 示例路径
       return response.data;
     } catch (error) {
-      console.error('获取 products 失败:', error);
-      return [];
+      console.error('Error fetching products:', error);
+      throw error;
     }
   },
 
-  // 其他游客相关的 API 请求...
-};
+  async registerUser(userData) {
+    try {
 
-export default touristApiService;
+      const response = await touristApi.post('/register/', userData);
+      console.log('Registration successful:', response.data);
+      return response;
+    } catch (error) {
+      console.error('Registration failed:', error);
+      throw error;
+    }
+  },
+
+};
