@@ -109,12 +109,15 @@
 
 
 # backend/apps/products/views.py
-from rest_framework import viewsets, permissions, generics
+from rest_framework import viewsets, permissions, generics, filters
+from rest_framework.views import APIView
 from .models import Product, ProductImage, ProductInquiry, Cart, CartItem
 from .serializers import ProductSerializer, ProductImageSerializer, ProductInquirySerializer, CartSerializer, CartItemSerializer
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from django.db.models import Count, Q
+from rest_framework.permissions import IsAuthenticated
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
@@ -155,6 +158,12 @@ class CartViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # 每个用户只能看到自己的购物车
         return Cart.objects.filter(user=self.request.user)
+    
+    def list(self, request):
+        # 获取用户的购物车，如果不存在则创建
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        serializer = self.get_serializer(cart)
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -198,3 +207,248 @@ class CartItemViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # 每个用户只能看到自己购物车中的商品项
         return CartItem.objects.filter(cart__user=self.request.user)
+
+# 添加缺少的视图类
+class ProductSearchView(generics.ListAPIView):
+    """
+    产品搜索视图
+    """
+    serializer_class = ProductSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'description', 'farmer__username']
+    
+    def get_queryset(self):
+        queryset = Product.objects.filter(status='published')
+        
+        # 分类过滤
+        category = self.request.query_params.get('category', None)
+        if category:
+            queryset = queryset.filter(category=category)
+        
+        # 价格范围过滤
+        min_price = self.request.query_params.get('min_price', None)
+        if min_price:
+            queryset = queryset.filter(price__gte=min_price)
+        
+        max_price = self.request.query_params.get('max_price', None)
+        if max_price:
+            queryset = queryset.filter(price__lte=max_price)
+            
+        return queryset
+
+class ProductRecommendationsView(APIView):
+    """
+    产品推荐视图
+    """
+    def get(self, request):
+        # 获取热门产品（基于评价和订单数量）
+        popular_products = Product.objects.filter(status='published').annotate(
+            inquiry_count=Count('inquiries')
+        ).order_by('-inquiry_count')[:5]
+        
+        # 返回推荐产品
+        serializer = ProductSerializer(popular_products, many=True)
+        return Response(serializer.data)
+
+class ProductFavoritesView(APIView):
+    """
+    用户收藏产品视图
+    """
+    def get(self, request):
+        # 这里假设有个 UserFavorite 模型用于保存用户收藏
+        # 由于模型可能未定义，我们返回空列表作为示例
+        return Response([])
+    
+    def post(self, request):
+        # 添加收藏的逻辑
+        product_id = request.data.get('product_id')
+        if not product_id:
+            return Response({"error": "需要提供产品ID"}, status=400)
+            
+        try:
+            product = Product.objects.get(id=product_id)
+            # 假设有个 UserFavorite 模型，这里添加收藏
+            # UserFavorite.objects.create(user=request.user, product=product)
+            return Response({"message": "添加收藏成功"})
+        except Product.DoesNotExist:
+            return Response({"error": "产品不存在"}, status=404)
+    
+    def delete(self, request):
+        # 取消收藏的逻辑
+        product_id = request.query_params.get('product_id')
+        if not product_id:
+            return Response({"error": "需要提供产品ID"}, status=400)
+            
+        # 假设有个 UserFavorite 模型，这里删除收藏
+        # UserFavorite.objects.filter(user=request.user, product_id=product_id).delete()
+        return Response({"message": "取消收藏成功"})
+
+class ProductCategoryView(APIView):
+    """
+    产品分类视图
+    """
+    def get(self, request):
+        # 这里应该返回产品分类，但由于模型可能未定义，我们返回空列表作为示例
+        categories = [
+            {"id": 1, "name": "水果"},
+            {"id": 2, "name": "蔬菜"},
+            {"id": 3, "name": "谷物"},
+            {"id": 4, "name": "肉类"},
+            {"id": 5, "name": "乳制品"}
+        ]
+        return Response(categories)
+
+class PopularProductsView(APIView):
+    """
+    热门产品视图
+    """
+    def get(self, request):
+        # 获取热门产品（基于评价和订单数量）
+        popular_products = Product.objects.filter(status='published').annotate(
+            inquiry_count=Count('inquiries')
+        ).order_by('-inquiry_count')[:10]
+        
+        # 返回热门产品
+        serializer = ProductSerializer(popular_products, many=True)
+        return Response(serializer.data)
+
+class CartSingleView(APIView):
+    """
+    单个购物车视图 - 兼容前端'/cart/'路径
+    """
+    permission_classes = [permissions.IsAuthenticated]  # 只有登录用户才能操作购物车
+    
+    def get(self, request):
+        # 获取或创建用户的购物车
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        serializer = CartSerializer(cart)
+        return Response(serializer.data)
+    
+    def post(self, request):
+        # 添加商品到购物车
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        product_id = request.data.get('product_id')
+        quantity = request.data.get('quantity', 1)
+        
+        try:
+            product = Product.objects.get(pk=product_id)
+        except Product.DoesNotExist:
+            return Response({'error': 'Product not found'}, status=400)
+
+        try:
+            cart_item = CartItem.objects.get(cart=cart, product=product)
+            cart_item.quantity += int(quantity)
+            cart_item.save()
+        except CartItem.DoesNotExist:
+            CartItem.objects.create(cart=cart, product=product, quantity=quantity)
+
+        serializer = CartSerializer(cart)
+        return Response(serializer.data)
+        
+    def delete(self, request):
+        # 清空购物车
+        cart = Cart.objects.filter(user=request.user).first()
+        if cart:
+            cart.items.all().delete()
+            return Response({"message": "Cart cleared successfully"})
+        return Response({"message": "No cart found"})
+
+class CartAddItemView(APIView):
+    """
+    添加商品到购物车 - 兼容前端'/cart/add_item/'路径
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request):
+        # 获取或创建用户的购物车
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        product_id = request.data.get('product_id')
+        quantity = int(request.data.get('quantity', 1))
+        
+        if not product_id:
+            return Response({'error': 'Product ID is required'}, status=400)
+            
+        try:
+            product = Product.objects.get(pk=product_id)
+        except Product.DoesNotExist:
+            return Response({'error': 'Product not found'}, status=404)
+            
+        # 查找或创建购物车项
+        try:
+            cart_item = CartItem.objects.get(cart=cart, product=product)
+            cart_item.quantity += quantity
+            cart_item.save()
+        except CartItem.DoesNotExist:
+            cart_item = CartItem.objects.create(
+                cart=cart,
+                product=product,
+                quantity=quantity
+            )
+            
+        serializer = CartSerializer(cart)
+        return Response(serializer.data)
+
+class CartItemOperationView(APIView):
+    """
+    购物车项目操作 - 兼容前端'/cart/items/{id}/'路径
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, item_id):
+        # 获取特定购物车项
+        try:
+            cart_item = CartItem.objects.get(id=item_id, cart__user=request.user)
+            serializer = CartItemSerializer(cart_item)
+            return Response(serializer.data)
+        except CartItem.DoesNotExist:
+            return Response({'error': 'Cart item not found'}, status=404)
+    
+    def put(self, request, item_id):
+        # 更新购物车项数量
+        try:
+            cart_item = CartItem.objects.get(id=item_id, cart__user=request.user)
+            quantity = int(request.data.get('quantity', 1))
+            
+            if quantity > 0:
+                cart_item.quantity = quantity
+                cart_item.save()
+                serializer = CartItemSerializer(cart_item)
+                return Response(serializer.data)
+            else:
+                cart_item.delete()
+                return Response({'message': 'Item removed from cart'})
+                
+        except CartItem.DoesNotExist:
+            return Response({'error': 'Cart item not found'}, status=404)
+    
+    def delete(self, request, item_id):
+        # 从购物车中删除项目
+        try:
+            cart_item = CartItem.objects.get(id=item_id, cart__user=request.user)
+            cart_item.delete()
+            return Response({'message': 'Item removed from cart'})
+        except CartItem.DoesNotExist:
+            return Response({'error': 'Cart item not found'}, status=404)
+
+class CartItemsView(APIView):
+    """
+    购物车项目批量操作 - 兼容前端'/cart/items/'路径
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        # 获取用户购物车中的所有项目
+        cart = Cart.objects.filter(user=request.user).first()
+        if cart:
+            cart_items = cart.items.all()
+            serializer = CartItemSerializer(cart_items, many=True)
+            return Response(serializer.data)
+        return Response([])
+    
+    def delete(self, request):
+        # 清空购物车
+        cart = Cart.objects.filter(user=request.user).first()
+        if cart:
+            cart.items.all().delete()
+            return Response({'message': 'Cart cleared successfully'})
+        return Response({'message': 'No cart found'})

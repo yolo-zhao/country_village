@@ -34,6 +34,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
+    'drf_yasg',
     'simpleui',
     'corsheaders',
     'django.contrib.admin',
@@ -89,7 +90,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'village3',  # 替换为您的 MySQL 数据库名称
         'USER': 'root',      # 替换为您的 MySQL 用户名
-        'PASSWORD': '2020Zhao1209',  # 替换为您的 MySQL 密码
+        'PASSWORD': '123456',  # 替换为您的 MySQL 密码
         'HOST': 'localhost',
         'PORT': '3306',  # MySQL 的默认端口是 3306
         'OPTIONS': {
@@ -162,3 +163,14 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8080",
     "http://127.0.0.1:8080",
 ]
+
+# REST Framework 设置
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}

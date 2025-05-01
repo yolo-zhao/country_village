@@ -7,6 +7,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'email',] # 根据需要添加更多字段
+        ref_name = 'MainUserSerializer'  # 添加唯一的ref_name
 
 
 class UserCreationSerializer(serializers.ModelSerializer):
@@ -15,6 +16,7 @@ class UserCreationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'email', 'password']
+        ref_name = 'UserCreationSerializer'  # 添加唯一的ref_name
 
     def create(self, validated_data):
         password = validated_data.pop('password')

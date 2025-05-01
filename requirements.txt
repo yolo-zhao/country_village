@@ -7,3 +7,17 @@ django-simpleui==2025.1.13
 Pillow==11.1.0
 djangorestframework==3.16.0
 openai==1.74.0
+requests==2.32.3
+charset-normalizer==3.4.1
+urllib3==2.4.0
+drf-yasg==1.21.10
+inflection==0.5.1
+packaging==25.0
+pytz==2025.2
+pyyaml==6.0.2
+uritemplate==4.1.1
+coreapi==2.3.3
+coreschema==0.0.4
+itypes==1.2.0
+jinja2==3.1.6
+MarkupSafe==3.0.2

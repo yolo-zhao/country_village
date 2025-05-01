@@ -7,6 +7,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'email',] # 可以根据需要添加更多字段
+        ref_name = 'ActivityUserSerializer'  # 添加唯一的ref_name
 
 class ActivityCategorySerializer(serializers.ModelSerializer):
     class Meta:

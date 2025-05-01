@@ -8,6 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username','first_name', 'last_name', 'email']
+        ref_name = 'ProductUserSerializer'  # 添加唯一的ref_name
 #产品图片
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:

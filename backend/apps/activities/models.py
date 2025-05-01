@@ -40,6 +40,8 @@ class Activity(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     location = models.CharField(max_length=200)
+    location_latitude = models.FloatField(null=True, blank=True)  # 纬度
+    location_longitude = models.FloatField(null=True, blank=True)  # 经度
     category = models.ForeignKey(ActivityCategory, on_delete=models.CASCADE, related_name='activities')
     tags = models.ManyToManyField(Tag, blank=True)
     cover_image = models.ImageField(upload_to='activities/covers/')
@@ -148,6 +150,11 @@ class ActivityCheckIn(models.Model):
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='check_ins')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activity_check_ins')
     check_in_time = models.DateTimeField(auto_now_add=True)
+    location_text = models.CharField(max_length=200, blank=True, null=True)
+    location_latitude = models.FloatField(null=True, blank=True)  # 纬度
+    location_longitude = models.FloatField(null=True, blank=True)  # 经度
+    note = models.TextField(blank=True, null=True)
+    photo = models.ImageField(upload_to='activities/check_ins/', blank=True, null=True)
 
     class Meta:
         verbose_name = _("活动打卡")
