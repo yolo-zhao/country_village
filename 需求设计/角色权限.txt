@@ -1,0 +1,121 @@
+游客权限：
+乡村活动 | 活动 | Can view activity
+乡村活动 | 活动分类 | Can view activity category
+乡村活动 | 活动打卡 | Can add activity check in
+乡村活动 | 活动打卡 | Can change activity check in
+乡村活动 | 活动打卡 | Can delete activity check in
+乡村活动 | 活动打卡 | Can view activity check in
+乡村活动 | 活动评论 | Can add activity comment
+乡村活动 | 活动评论 | Can change activity comment
+乡村活动 | 活动评论 | Can delete activity comment
+乡村活动 | 活动评论 | Can view activity comment
+乡村活动 | 活动图片 | Can view activity image
+乡村活动 | 活动点赞 | Can add activity like
+乡村活动 | 活动点赞 | Can change activity like
+乡村活动 | 活动点赞 | Can delete activity like
+乡村活动 | 活动点赞 | Can view activity like
+乡村活动 | 活动照片 | Can add activity photo
+乡村活动 | 活动照片 | Can change activity photo
+乡村活动 | 活动照片 | Can delete activity photo
+乡村活动 | 活动照片 | Can view activity photo
+乡村活动 | 活动评价 | Can add activity review
+乡村活动 | 活动评价 | Can change activity review
+乡村活动 | 活动评价 | Can delete activity review
+乡村活动 | 活动评价 | Can view activity review
+乡村活动 | 预约 | Can add reservation
+乡村活动 | 预约 | Can change reservation
+乡村活动 | 预约 | Can delete reservation
+乡村活动 | 预约 | Can view reservation
+乡村活动 | 标签 | Can add tag
+乡村活动 | 标签 | Can change tag
+乡村活动 | 标签 | Can delete tag
+乡村活动 | 标签 | Can view tag
+内容类型 | 内容类型 | Can add content type
+内容类型 | 内容类型 | Can change content type
+内容类型 | 内容类型 | Can delete content type
+内容类型 | 内容类型 | Can view content type
+农产品 | 购物车 | Can add 购物车
+农产品 | 购物车 | Can change 购物车
+农产品 | 购物车 | Can delete 购物车
+农产品 | 购物车 | Can view 购物车
+农产品 | 购物车商品项 | Can add 购物车商品项
+农产品 | 购物车商品项 | Can change 购物车商品项
+农产品 | 购物车商品项 | Can delete 购物车商品项
+农产品 | 购物车商品项 | Can view 购物车商品项
+农产品 | 农特产品 | Can view product
+农产品 | 农特产品图片 | Can view product image
+农产品 | 农特产品咨询 | Can add product inquiry
+农产品 | 农特产品咨询 | Can change product inquiry
+农产品 | 农特产品咨询 | Can delete product inquiry
+农产品 | 农特产品咨询 | Can view product inquiry
+会话 | 会话 | Can add session
+会话 | 会话 | Can change session
+会话 | 会话 | Can delete session
+会话 | 会话 | Can view session
+Users | 农户信息 | Can view farmer profile
+Users | 游客信息 | Can add tourist profile
+Users | 游客信息 | Can change tourist profile
+Users | 游客信息 | Can delete tourist profile
+Users | 游客信息 | Can view tourist profile
+农户：
+乡村活动 | 活动 | Can view activity
+乡村活动 | 活动分类 | Can view activity category
+乡村活动 | 活动打卡 | Can add activity check in
+乡村活动 | 活动打卡 | Can change activity check in
+乡村活动 | 活动打卡 | Can delete activity check in
+乡村活动 | 活动打卡 | Can view activity check in
+乡村活动 | 活动评论 | Can add activity comment
+乡村活动 | 活动评论 | Can change activity comment
+乡村活动 | 活动评论 | Can delete activity comment
+乡村活动 | 活动评论 | Can view activity comment
+乡村活动 | 活动图片 | Can view activity image
+乡村活动 | 活动点赞 | Can add activity like
+乡村活动 | 活动点赞 | Can change activity like
+乡村活动 | 活动点赞 | Can delete activity like
+乡村活动 | 活动点赞 | Can view activity like
+乡村活动 | 活动照片 | Can add activity photo
+乡村活动 | 活动照片 | Can change activity photo
+乡村活动 | 活动照片 | Can delete activity photo
+乡村活动 | 活动照片 | Can view activity photo
+乡村活动 | 活动评价 | Can add activity review
+乡村活动 | 活动评价 | Can change activity review
+乡村活动 | 活动评价 | Can delete activity review
+乡村活动 | 活动评价 | Can view activity review
+乡村活动 | 预约 | Can add reservation
+乡村活动 | 预约 | Can change reservation
+乡村活动 | 预约 | Can delete reservation
+乡村活动 | 预约 | Can view reservation
+乡村活动 | 标签 | Can add tag
+乡村活动 | 标签 | Can change tag
+乡村活动 | 标签 | Can delete tag
+乡村活动 | 标签 | Can view tag
+内容类型 | 内容类型 | Can add content type
+内容类型 | 内容类型 | Can change content type
+内容类型 | 内容类型 | Can delete content type
+内容类型 | 内容类型 | Can view content type
+农产品 | 购物车 | Can add 购物车
+农产品 | 购物车 | Can change 购物车
+农产品 | 购物车 | Can delete 购物车
+农产品 | 购物车 | Can view 购物车
+农产品 | 购物车商品项 | Can add 购物车商品项
+农产品 | 购物车商品项 | Can change 购物车商品项
+农产品 | 购物车商品项 | Can delete 购物车商品项
+农产品 | 购物车商品项 | Can view 购物车商品项
+农产品 | 农特产品 | Can view product
+农产品 | 农特产品图片 | Can view product image
+农产品 | 农特产品咨询 | Can add product inquiry
+农产品 | 农特产品咨询 | Can change product inquiry
+农产品 | 农特产品咨询 | Can delete product inquiry
+农产品 | 农特产品咨询 | Can view product inquiry
+会话 | 会话 | Can add session
+会话 | 会话 | Can change session
+会话 | 会话 | Can delete session
+会话 | 会话 | Can view session
+Users | 农户信息 | Can view farmer profile
+Users | 游客信息 | Can add tourist profile
+Users | 游客信息 | Can change tourist profile
+Users | 游客信息 | Can delete tourist profile
+Users | 游客信息 | Can view tourist profile
+管理员：
+
+

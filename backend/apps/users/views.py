@@ -1,4 +1,3 @@
-
 # users/views.py
 from rest_framework import viewsets, permissions, generics
 from django.contrib.auth.models import User
@@ -32,37 +31,34 @@ class RegistrationView(generics.CreateAPIView):
                          }, status=status.HTTP_201_CREATED, headers=headers)
 
 class CustomAuthToken(ObtainAuthToken):
-
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data,
-                                           context={'request': request})
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         user = serializer.validated_data['user']
-        token = serializer.validated_data['token']
+        token, created = Token.objects.get_or_create(user=user)
 
         role = None
         if user.is_superuser or user.is_staff:
-             role = 'admin'
+            role = 'admin'
         if role is None:
             try:
                 if hasattr(user, 'touristprofile') and user.touristprofile is not None:
                     role = 'tourist'
                 elif hasattr(user, 'farmerprofile') and user.farmerprofile is not None:
                     role = 'farmer'
-
             except (TouristProfile.DoesNotExist, FarmerProfile.DoesNotExist):
                 pass
 
         return Response({
-            'token': token.key, # 返回 Token 字符串
-            'user_id': user.pk, # 返回用户 ID
-            'username': user.username, # 返回用户名
-            'role': role, # <-- 将判断出的角色信息添加到响应中
+            'success': True,
+            'token': token.key,
+            'user_id': user.pk,
+            'username': user.username,
+            'role': role,
             'email': user.email,
             'first_name': user.first_name,
             'last_name': user.last_name,
-        }, status=status.HTTP_200_OK) # 登录成功返回 200 OK
+        })
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):

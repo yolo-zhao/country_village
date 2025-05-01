@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'rest_framework',
+    'rest_framework.authtoken',
     'simpleui',
     'corsheaders',
     'django.contrib.admin',
@@ -149,4 +150,15 @@ DEEPSEEK_API_KEY = "sk-03de6896e8274332a28720cf7a72e28e"
 DEEPSEEK_API_URL = "https://api.deepseek.com"
 
 
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS 设置
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+]
