@@ -32,7 +32,7 @@ const banners = ref([
   { id: 3, image: 'https://via.placeholder.com/1200x300/d0d0d0/555?Text=Activity+3', title: '推荐活动三', description: '活动简介三...' },
 ]);
 
-// 在这里，我们之后会替换为从后端获取的 banner 数据
+
 </script>
 
 <style scoped>
