@@ -2,6 +2,7 @@
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { aiApi } from '../api/ai'
 import { useUserStore } from '../stores/user'
+import { ChatDotRound, Loading, User, Position } from '@element-plus/icons-vue'
 
 const userStore = useUserStore()
 
@@ -183,10 +184,12 @@ onMounted(() => {
         >
           <div class="message-avatar">
             <el-avatar 
-              :icon="message.role === 'assistant' ? 'ChatDotRound' : 'User'" 
               :size="36"
               :color="message.role === 'assistant' ? '#409EFF' : '#67C23A'"
-            />
+            >
+              <el-icon v-if="message.role === 'assistant'"><ChatDotRound /></el-icon>
+              <el-icon v-else><User /></el-icon>
+            </el-avatar>
           </div>
           <div class="message-content">
             <div class="message-header">
@@ -216,10 +219,11 @@ onMounted(() => {
           <template #append>
             <el-button
               type="primary"
-              :icon="sendingMessage ? 'Loading' : 'Position'"
               :disabled="!userInput.trim() || !aiStatus.available && !aiStatus.loading || sendingMessage"
               @click="sendMessage"
             >
+              <el-icon v-if="sendingMessage"><Loading /></el-icon>
+              <el-icon v-else><Position /></el-icon>
               {{ sendingMessage ? '发送中...' : '发送' }}
             </el-button>
           </template>

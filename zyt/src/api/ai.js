@@ -7,7 +7,7 @@ export const aiApi = {
    * @returns {Promise} - 返回AI助手的响应
    */
   sendMessage(message) {
-    return http.post('/core/ai-assistant/', { message })
+    return http.post('/ai-assistant', { message })
   },
   
   /**
@@ -15,6 +15,6 @@ export const aiApi = {
    * @returns {Promise} - 返回AI助手的状态信息
    */
   getStatus() {
-    return http.get('/core/ai-assistant/status/')
+    return http.get('/ai-assistant/status')
   }
 } 

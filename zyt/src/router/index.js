@@ -88,6 +88,11 @@ const routes = [
     name: 'EditProduct',
     component: () => import('../views/farmer/ProductForm.vue'),
     meta: { requiresAuth: true, role: 'farmer' }
+  },
+  {
+    path: '/ai-assistant',
+    name: 'AIAssistant',
+    component: () => import('../views/AIAssistant.vue')
   }
 ]
 

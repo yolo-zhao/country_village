@@ -21,7 +21,9 @@ urlpatterns = [
     path('weather/', views.WeatherInfoView.as_view(), name='weather'),  # 天气信息接口
     path('dashboard/', views.DashboardView.as_view(), name='dashboard'),  # 控制面板数据接口
     path('search/', views.GlobalSearchView.as_view(), name='global-search'),  # 全局搜索接口
-    # AI助手接口
+    # AI助手接口 - 同时支持有斜杠和无斜杠的URL
+    path('ai-assistant', views.AIAssistantView.as_view(), name='ai-assistant-no-slash'),
     path('ai-assistant/', views.AIAssistantView.as_view(), name='ai-assistant'),
+    path('ai-assistant/status', views.AIAssistantView.as_view(), name='ai-assistant-status-no-slash'),
     path('ai-assistant/status/', views.AIAssistantView.as_view(), name='ai-assistant-status'),
 ]

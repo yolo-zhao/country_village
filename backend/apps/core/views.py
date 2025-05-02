@@ -365,7 +365,8 @@ class AIAssistantView(APIView):
     """
     AI助手API接口
     """
-    permission_classes = [IsAuthenticated]
+    # 移除权限要求，允许未登录用户访问
+    permission_classes = []
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -380,38 +381,38 @@ class AIAssistantView(APIView):
     
     def get(self, request):
         """检查AI助手状态"""
-        if request.path.endswith('/status/'):
+        if '/status' in request.path:
+            # 获取用户标识，未登录用户使用IP地址
+            user_id = request.user.id if request.user.is_authenticated else f"guest_{request.META.get('REMOTE_ADDR', 'unknown')}"
+            
             return Response({
                 "enabled": AI_ASSISTANT_ENABLED,
                 "available": AI_ASSISTANT_ENABLED and self.app is not None,
                 "sessions_count": len(self.sessions),
-                "user_has_session": request.user.id in self.sessions
+                "user_has_session": user_id in self.sessions
             })
         return Response({"error": "不支持的请求"}, status=status.HTTP_400_BAD_REQUEST)
     
     def post(self, request):
         """处理用户对AI助手的请求"""
+        # 获取用户标识，未登录用户使用IP地址
+        user_id = request.user.id if request.user.is_authenticated else f"guest_{request.META.get('REMOTE_ADDR', 'unknown')}"
+        user_input = request.data.get('message', '')
+        
+        if not user_input:
+            return Response({"error": "消息不能为空"}, status=status.HTTP_400_BAD_REQUEST)
+        
         if not AI_ASSISTANT_ENABLED or not self.app:
             # 使用备用AI响应
-            user_input = request.data.get('message', '')
-            if not user_input:
-                return Response({"error": "消息不能为空"}, status=status.HTTP_400_BAD_REQUEST)
-                
             response = fallback_ai.respond_to(user_input)
             logger.info(f"使用备用AI响应: '{user_input}' -> '{response}'")
             
             return Response({
                 "message": response,
-                "session_id": request.user.id,
+                "session_id": user_id,
                 "fallback": True
             })
-            
-        user_id = request.user.id
-        user_input = request.data.get('message', '')
         
-        if not user_input:
-            return Response({"error": "消息不能为空"}, status=status.HTTP_400_BAD_REQUEST)
-            
         # 获取或创建用户会话
         if user_id not in self.sessions:
             self.sessions[user_id] = {
