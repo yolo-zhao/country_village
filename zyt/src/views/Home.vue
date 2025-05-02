@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { activityApi } from '../api/activities'
 import { productApi } from '../api/products'
+import { ChatDotRound } from '@element-plus/icons-vue'
 
 // 数据加载状态
 const loading = ref({
@@ -95,6 +96,11 @@ onMounted(() => {
               浏览农产品
             </el-button>
           </router-link>
+          <router-link to="/ai-assistant">
+            <el-button type="info" size="large">
+              <el-icon><ChatDotRound /></el-icon> AI乡村助手
+            </el-button>
+          </router-link>
         </div>
       </div>
     </section>
@@ -173,6 +179,14 @@ onMounted(() => {
           </div>
           <h3>地道乡村体验</h3>
           <p>体验真实的乡村生活，感受纯朴民风，远离城市喧嚣</p>
+        </div>
+        
+        <div class="feature-item">
+          <div class="feature-icon">
+            <el-icon><ChatDotRound /></el-icon>
+          </div>
+          <h3>AI乡村助手</h3>
+          <p>智能助手为您解答关于乡村旅游、农产品和活动的各类问题，提供个性化建议</p>
         </div>
       </div>
     </section>
