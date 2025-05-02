@@ -1,4 +1,5 @@
 import http from './http'
+import { serializeActivity, populateActivityFormData } from './serializers'
 
 export const activityApi = {
   // 获取活动列表
@@ -109,12 +110,116 @@ export const activityApi = {
   
   // 创建新活动
   createActivity(data) {
-    return http.post('/activities/', data)
+    console.log('原始提交数据:', data);
+    console.log('分类ID原始值:', data.category, '类型:', typeof data.category);
+    console.log('分类ID_ID原始值:', data.category_id, '类型:', typeof data.category_id);
+    
+    // 确保category是数字类型
+    const categoryId = Number(data.category);
+    if (!categoryId || isNaN(categoryId)) {
+      console.error('无效的分类ID:', data.category);
+      return Promise.reject(new Error('请选择有效的活动分类'));
+    }
+    
+    // 如果是编辑模式，cover_image是URL，则使用JSON格式
+    if (data.cover_image && typeof data.cover_image === 'string' && data.cover_image.startsWith('http')) {
+      // 使用序列化器处理数据
+      const submitData = serializeActivity(data);
+      console.log('JSON提交数据:', submitData);
+      console.log('JSON提交的category_id:', submitData.category_id);
+      return http.post('/activities/', submitData);
+    }
+    
+    // 否则使用FormData处理
+    const formData = new FormData();
+    
+    // 使用序列化器填充FormData
+    populateActivityFormData(formData, data);
+    
+    console.log('添加分类ID:', categoryId, '类型:', typeof categoryId);
+    
+    // 获取默认图像并添加到表单数据
+    return fetch('/media/activities/covers/下载_1.jpg')
+      .then(res => res.blob())
+      .then(blob => {
+        // 使用已存在的图片作为默认图片
+        const defaultImage = new File([blob], "default_activity_cover.jpg", { type: 'image/jpeg' });
+        formData.append('cover_image', defaultImage);
+        
+        // 调试输出所有表单字段
+        console.log('FormData内容:');
+        const formEntries = {};
+        for (let pair of formData.entries()) {
+          console.log(pair[0] + ': ' + pair[1]);
+          formEntries[pair[0]] = pair[1];
+        }
+        console.log('FormData汇总:', formEntries);
+        console.log('FormData中的category_id:', formEntries['category_id']);
+        
+        // 发送请求
+        return http.post('/activities/', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      });
   },
   
   // 更新活动
   updateActivity(activityId, data) {
-    return http.put(`/activities/${activityId}/`, data)
+    console.log('原始更新数据:', data);
+    console.log('分类ID原始值:', data.category, '类型:', typeof data.category);
+    console.log('分类ID_ID原始值:', data.category_id, '类型:', typeof data.category_id);
+    
+    // 确保category是数字类型
+    const categoryId = Number(data.category);
+    if (!categoryId || isNaN(categoryId)) {
+      console.error('无效的分类ID:', data.category);
+      return Promise.reject(new Error('请选择有效的活动分类'));
+    }
+    
+    // 如果cover_image是URL，则使用普通JSON格式
+    if (data.cover_image && typeof data.cover_image === 'string' && data.cover_image.startsWith('http')) {
+      // 使用序列化器处理数据
+      const submitData = serializeActivity(data);
+      console.log('JSON更新数据:', submitData);
+      console.log('JSON更新的category_id:', submitData.category_id);
+      return http.put(`/activities/${activityId}/`, submitData);
+    }
+    
+    // 否则使用FormData
+    const formData = new FormData();
+    
+    // 使用序列化器填充FormData
+    populateActivityFormData(formData, data);
+    
+    console.log('添加分类ID:', categoryId, '类型:', typeof categoryId);
+    
+    // 获取默认图像并添加到表单数据
+    return fetch('/media/activities/covers/下载_1.jpg')
+      .then(res => res.blob())
+      .then(blob => {
+        // 使用已存在的图片作为默认图片
+        const defaultImage = new File([blob], "default_activity_cover.jpg", { type: 'image/jpeg' });
+        formData.append('cover_image', defaultImage);
+        
+        // 调试输出所有表单字段
+        console.log('FormData内容:');
+        const formEntries = {};
+        for (let pair of formData.entries()) {
+          console.log(pair[0] + ': ' + pair[1]);
+          formEntries[pair[0]] = pair[1];
+        }
+        console.log('FormData汇总:', formEntries);
+        console.log('FormData中的category_id:', formEntries['category_id']);
+        
+        // 发送请求
+        return http.put(`/activities/${activityId}/`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      });
   },
   
   // 删除活动
@@ -152,4 +257,4 @@ export const activityApi = {
   createActivityCheckIn(data) {
     return http.post('/activity-check-ins/', data)
   }
-} 
+}

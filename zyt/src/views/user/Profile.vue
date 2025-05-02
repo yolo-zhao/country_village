@@ -133,7 +133,13 @@ onMounted(() => {
 
 <template>
   <div class="profile-page">
-    <h1 class="page-title">个人资料</h1>
+    <h1 class="page-title">游客个人中心</h1>
+    
+    <div class="tourist-info" v-if="userStore.isTourist">
+      <el-alert type="success" show-icon :closable="false">
+        <strong>游客专属信息！</strong> 您目前以游客身份登录，可以浏览产品、活动并进行购买和预约。
+      </el-alert>
+    </div>
     
     <el-card class="profile-card">
       <template #header>

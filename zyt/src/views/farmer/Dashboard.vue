@@ -20,6 +20,14 @@ const products = ref([])
 const activitiesLoading = ref(true)
 const productsLoading = ref(true)
 
+// 格式化价格的辅助函数
+const formatPrice = (price) => {
+  // 确保价格是数字类型
+  const numPrice = typeof price === 'number' ? price : 
+                  (typeof price === 'string' ? parseFloat(price) || 0 : 0);
+  return numPrice.toFixed(2);
+}
+
 // 获取农场主发布的活动
 const fetchFarmerActivities = async () => {
   activitiesLoading.value = true
@@ -133,7 +141,13 @@ onMounted(() => {
 
 <template>
   <div class="farmer-dashboard">
-    <h1 class="page-title">农场管理中心</h1>
+    <h1 class="page-title">农户管理中心 - 农产品与活动发布平台</h1>
+    
+    <div class="dashboard-intro">
+      <el-alert type="info" show-icon :closable="false">
+        <strong>欢迎，农户用户！</strong> 这是您专属的管理平台，在这里您可以管理您发布的乡村活动和农产品。
+      </el-alert>
+    </div>
     
     <el-tabs v-model="activeTab" class="dashboard-tabs">
       <!-- 活动管理标签页 -->
@@ -259,7 +273,7 @@ onMounted(() => {
           
           <el-table-column prop="price" label="价格" width="100">
             <template #default="{ row }">
-              ¥{{ row.price.toFixed(2) }}
+              ¥{{ formatPrice(row.price) }}
             </template>
           </el-table-column>
           

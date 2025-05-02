@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import gettext_lazy as _
+from django.utils.text import slugify
+from django.utils.crypto import get_random_string
 
 class ActivityCategory(models.Model):
     """
@@ -47,6 +49,16 @@ class Activity(models.Model):
     cover_image = models.ImageField(upload_to='activities/covers/')
     max_participants = models.PositiveIntegerField(default=0)
     farmer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('draft', '草稿'),
+            ('published', '已发布'),
+            ('cancelled', '已取消'),
+            ('completed', '已完成')
+        ],
+        default='published'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -58,9 +70,23 @@ class Activity(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
-        if not self.slug:
-            from django.utils.text import slugify
-            self.slug = slugify(self.title)
+        # 确保slug不为空
+        if not self.slug and self.title:
+            # 生成基础slug
+            base_slug = slugify(self.title)
+            if not base_slug:
+                # 如果标题不能生成有效的slug，则使用随机字符串
+                base_slug = 'activity-' + get_random_string(8)
+            
+            # 检查是否已存在相同的slug
+            existing_slugs = Activity.objects.filter(slug__startswith=base_slug).values_list('slug', flat=True)
+            if base_slug in existing_slugs:
+                # 如果存在，添加随机后缀
+                random_suffix = get_random_string(4)
+                self.slug = f"{base_slug}-{random_suffix}"
+            else:
+                self.slug = base_slug
+        
         super().save(*args, **kwargs)
 
 class ActivityImage(models.Model):

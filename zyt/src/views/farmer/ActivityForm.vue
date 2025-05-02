@@ -2,10 +2,13 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { activityApi } from '../../api/activities'
+import { serializeActivity } from '../../api/serializers'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useUserStore } from '../../stores/user'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 
 // 获取活动ID（如果是编辑模式）
 const activityId = computed(() => route.params.id)
@@ -26,7 +29,8 @@ const activityForm = reactive({
   category: '',
   tags: [],
   cover_image: '',
-  max_participants: 20
+  max_participants: 20,
+  status: 'published'
 })
 
 // 表单规则
@@ -48,7 +52,17 @@ const rules = {
     { required: true, message: '请输入活动地点', trigger: 'blur' }
   ],
   category: [
-    { required: true, message: '请选择活动分类', trigger: 'change' }
+    { required: true, message: '请选择活动分类', trigger: 'change' },
+    { 
+      validator: (rule, value, callback) => {
+        if (!value || value === '' || isNaN(Number(value))) {
+          callback(new Error('请选择有效的活动分类'));
+        } else {
+          callback();
+        }
+      }, 
+      trigger: 'change' 
+    }
   ],
   max_participants: [
     { required: true, type: 'number', message: '请输入人数上限', trigger: 'blur' }
@@ -73,6 +87,12 @@ const fetchCategories = async () => {
   try {
     const response = await activityApi.getCategories()
     categories.value = response.data || []
+    console.log('获取到分类列表:', categories.value);
+    
+    // 确保分类是有效的数据
+    if (categories.value.length === 0) {
+      ElMessage.warning('未获取到活动分类数据，请联系管理员');
+    }
   } catch (error) {
     console.error('获取活动分类失败:', error)
     ElMessage.error('获取活动分类失败')
@@ -105,10 +125,13 @@ const fetchActivityDetail = async () => {
     activityForm.start_time = activity.start_time
     activityForm.end_time = activity.end_time
     activityForm.location = activity.location
-    activityForm.category = activity.category?.id
+    activityForm.category = activity.category?.id ? Number(activity.category.id) : ''
     activityForm.tags = activity.tags?.map(tag => tag.id) || []
     activityForm.cover_image = activity.cover_image
     activityForm.max_participants = activity.max_participants
+    
+    console.log('加载的活动数据:', activityForm);
+    console.log('分类ID:', activityForm.category, '类型:', typeof activityForm.category);
   } catch (error) {
     console.error('获取活动详情失败:', error)
     ElMessage.error('获取活动详情失败')
@@ -124,15 +147,41 @@ const submitForm = async () => {
   
   await formRef.value.validate(async (valid) => {
     if (valid) {
+      // 检查分类是否已选择
+      if (!activityForm.category) {
+        ElMessage.error('请选择活动分类');
+        return;
+      }
+      
+      // 确保分类字段是数字
+      const categoryId = Number(activityForm.category);
+      if (isNaN(categoryId) || categoryId <= 0) {
+        ElMessage.error('请选择有效的活动分类');
+        return;
+      }
+      
+      console.log('提交表单数据:', activityForm);
+      console.log('分类ID:', activityForm.category, '类型:', typeof activityForm.category);
+      
+      // 确保category是数字类型
+      activityForm.category = categoryId;
+      
       submitLoading.value = true
       try {
+        // 使用序列化器处理数据
+        const submitData = serializeActivity({ ...activityForm });
+        
+        console.log('序列化后的提交数据:', submitData);
+        console.log('处理后分类ID:', submitData.category, '类型:', typeof submitData.category);
+        console.log('添加的category_id:', submitData.category_id, '类型:', typeof submitData.category_id);
+        
         if (isEditMode.value) {
           // 编辑活动
-          await activityApi.updateActivity(activityId.value, activityForm)
+          await activityApi.updateActivity(activityId.value, submitData)
           ElMessage.success('活动更新成功')
         } else {
           // 创建活动
-          await activityApi.createActivity(activityForm)
+          await activityApi.createActivity(submitData)
           ElMessage.success('活动创建成功')
         }
         
@@ -140,8 +189,27 @@ const submitForm = async () => {
         router.push('/farmer/dashboard')
       } catch (error) {
         console.error('保存活动失败:', error)
-        ElMessage.error('保存活动失败')
-      } finally {
+        
+        // 显示更详细的错误信息
+        let errorMessage = '保存活动失败';
+        if (error.response && error.response.data) {
+          // 后端返回的详细错误信息
+          const backendErrors = error.response.data;
+          if (typeof backendErrors === 'object') {
+            // 处理对象形式的错误
+            errorMessage = Object.entries(backendErrors)
+              .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
+              .join('; ');
+          } else if (typeof backendErrors === 'string') {
+            // 处理字符串形式的错误
+            errorMessage = backendErrors;
+          }
+        } else if (error.message) {
+          // 前端验证捕获的错误
+          errorMessage = error.message;
+        }
+        
+        ElMessage.error(errorMessage);
         submitLoading.value = false
       }
     }
@@ -165,7 +233,17 @@ const cancelForm = () => {
 
 // 上传封面图片成功时的处理
 const handleCoverSuccess = (res) => {
-  activityForm.cover_image = res.url
+  console.log('上传图片成功，响应数据:', res);
+  if (res.url) {
+    activityForm.cover_image = res.url;
+    console.log('设置封面图片URL:', res.url);
+  } else if (res.data && res.data.url) {
+    activityForm.cover_image = res.data.url;
+    console.log('从data中设置封面图片URL:', res.data.url);
+  } else {
+    console.error('上传响应中没有找到图片URL:', res);
+    ElMessage.warning('图片上传成功，但无法获取图片URL');
+  }
 }
 
 // 图片上传前的验证
@@ -216,7 +294,7 @@ onMounted(() => {
         <el-input
           v-model="activityForm.description"
           type="textarea"
-          rows="5"
+          :rows="5"
           placeholder="请详细描述活动内容、特色和注意事项等"
         />
       </el-form-item>
@@ -254,7 +332,15 @@ onMounted(() => {
       </el-form-item>
       
       <el-form-item label="活动分类" prop="category">
-        <el-select v-model="activityForm.category" placeholder="选择活动分类">
+        <el-select 
+          v-model="activityForm.category" 
+          placeholder="选择活动分类"
+          value-key="id"
+          @change="val => { 
+            console.log('分类选择变化:', val, typeof val); 
+            activityForm.category = Number(val);
+          }"
+        >
           <el-option
             v-for="category in categories"
             :key="category.id"
@@ -262,6 +348,11 @@ onMounted(() => {
             :value="category.id"
           />
         </el-select>
+        <div class="form-tip" v-if="categories.length === 0">
+          <el-alert type="info" :closable="false" show-icon>
+            正在加载分类数据，如果未显示请刷新页面
+          </el-alert>
+        </div>
       </el-form-item>
       
       <el-form-item label="活动标签">
@@ -279,12 +370,21 @@ onMounted(() => {
         <el-input-number v-model="activityForm.max_participants" :min="1" :step="1" />
       </el-form-item>
       
+      <el-form-item label="活动状态" prop="status">
+        <el-select v-model="activityForm.status">
+          <el-option label="草稿" value="draft" />
+          <el-option label="已发布" value="published" />
+          <el-option label="已取消" value="cancelled" />
+          <el-option label="已完成" value="completed" />
+        </el-select>
+      </el-form-item>
+      
       <el-form-item label="封面图片">
         <el-upload
           class="cover-uploader"
-          action="/api/core/upload/"
+          action="/api/upload/"
           :headers="{
-            Authorization: `Token ${localStorage.getItem('token')}`
+            Authorization: `Token ${userStore.getToken}`
           }"
           :show-file-list="false"
           :on-success="handleCoverSuccess"
@@ -362,5 +462,10 @@ onMounted(() => {
   margin-top: 10px;
   font-size: 0.9rem;
   color: var(--text-color-secondary);
+}
+
+.form-tip {
+  margin-top: 5px;
+  font-size: 0.9rem;
 }
 </style> 

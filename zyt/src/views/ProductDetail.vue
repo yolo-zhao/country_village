@@ -77,7 +77,10 @@ const canBuy = computed(() => {
   console.log('产品状态:', product.value.status);
   
   // 允许available和published状态的商品可购买
-  return effectiveStock > 0 && (product.value.status === 'available' || product.value.status === 'published');
+  return effectiveStock > 0 && (
+    product.value.status === 'available' || 
+    product.value.status === 'published'
+  );
 })
 
 // 获取产品详情

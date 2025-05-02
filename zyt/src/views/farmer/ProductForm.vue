@@ -3,9 +3,11 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { productApi } from '../../api/products'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useUserStore } from '../../stores/user'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 
 // 获取产品ID（如果是编辑模式）
 const productId = computed(() => route.params.id)
@@ -22,7 +24,7 @@ const productForm = reactive({
   description: '',
   price: 0,
   stock: 1,
-  status: 'available',
+  status: 'published',
   images: []
 })
 
@@ -242,7 +244,7 @@ onMounted(() => {
       
       <el-form-item label="产品状态" prop="status">
         <el-radio-group v-model="productForm.status">
-          <el-radio label="available">上架销售</el-radio>
+          <el-radio label="published">上架销售</el-radio>
           <el-radio label="unavailable">下架</el-radio>
           <el-radio label="sold_out" :disabled="true">售罄</el-radio>
         </el-radio-group>
@@ -251,9 +253,9 @@ onMounted(() => {
       <el-form-item label="产品图片">
         <el-upload
           class="product-uploader"
-          action="/api/core/upload/"
+          action="/api/upload/"
           :headers="{
-            Authorization: `Token ${localStorage.getItem('token')}`
+            Authorization: `Token ${userStore.getToken}`
           }"
           :file-list="fileList"
           list-type="picture-card"

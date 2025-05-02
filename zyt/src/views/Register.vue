@@ -175,11 +175,40 @@ const handleRegister = async () => {
           </el-col>
         </el-row>
         
-        <el-form-item label="账号类型">
+        <el-form-item label="角色" prop="role">
           <el-radio-group v-model="registerForm.role">
             <el-radio label="tourist">游客</el-radio>
-            <el-radio label="farmer">农场主</el-radio>
+            <el-radio label="farmer">农户</el-radio>
           </el-radio-group>
+          <div class="role-description">
+            <template v-if="registerForm.role === 'tourist'">
+              <div class="role-info tourist-role">
+                <el-alert type="info" show-icon :closable="false">
+                  <template #title>
+                    <strong>游客角色:</strong> 可以浏览活动和农产品、参与活动预约、购买农产品，但不能发布活动和产品。
+                  </template>
+                </el-alert>
+              </div>
+            </template>
+            <template v-else-if="registerForm.role === 'farmer'">
+              <div class="role-info farmer-role">
+                <el-alert type="success" show-icon :closable="false">
+                  <template #title>
+                    <strong>农户角色:</strong> 可以发布和管理乡村活动、发布和管理农产品，同时也能参与其他农户的活动。
+                  </template>
+                </el-alert>
+              </div>
+            </template>
+            <template v-else>
+              <div class="role-info">
+                <el-alert type="warning" show-icon :closable="false">
+                  <template #title>
+                    请选择您的角色，注册后角色不可更改。
+                  </template>
+                </el-alert>
+              </div>
+            </template>
+          </div>
         </el-form-item>
         
         <el-form-item>
@@ -238,5 +267,17 @@ const handleRegister = async () => {
   .register-container {
     padding: 20px;
   }
+}
+
+.role-description {
+  margin-top: 10px;
+}
+
+.role-info {
+  margin-top: 10px;
+}
+
+.farmer-role, .tourist-role {
+  padding: 5px 0;
 }
 </style> 

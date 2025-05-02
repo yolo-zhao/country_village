@@ -87,21 +87,53 @@ onMounted(() => {
         </el-menu-item>
       </template>
       
-      <template v-else>
-        <el-sub-menu index="user">
+      <!-- 农户专属菜单 -->
+      <template v-else-if="isFarmer">
+        <el-sub-menu index="farmer">
           <template #title>
             <el-icon><Avatar /></el-icon>
-            个人中心
+            农户中心
           </template>
           
-          <el-menu-item index="/user/profile">个人资料</el-menu-item>
-          <el-menu-item index="/user/reservations">我的预约</el-menu-item>
+          <el-menu-item index="/user/profile">
+            <el-icon><User /></el-icon>
+            农户资料
+          </el-menu-item>
+          
+          <el-menu-item index="/farmer/dashboard">
+            <el-icon><Setting /></el-icon>
+            农户管理平台
+          </el-menu-item>
+          
+          <el-menu-item @click="handleLogout">
+            <el-icon><SwitchButton /></el-icon>
+            退出登录
+          </el-menu-item>
+        </el-sub-menu>
+      </template>
+      
+      <!-- 游客专属菜单 -->
+      <template v-else>
+        <el-sub-menu index="tourist">
+          <template #title>
+            <el-icon><Avatar /></el-icon>
+            游客中心
+          </template>
+          
+          <el-menu-item index="/user/profile">
+            <el-icon><User /></el-icon>
+            游客资料
+          </el-menu-item>
+          
+          <el-menu-item index="/user/reservations">
+            <el-icon><Calendar /></el-icon>
+            我的预约
+          </el-menu-item>
+          
           <el-menu-item index="/user/cart">
             <el-icon><ShoppingCart /></el-icon>
             购物车
           </el-menu-item>
-          
-          <el-menu-item v-if="isFarmer" index="/farmer/dashboard">农场管理</el-menu-item>
           
           <el-menu-item @click="handleLogout">
             <el-icon><SwitchButton /></el-icon>

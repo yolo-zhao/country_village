@@ -29,14 +29,42 @@ class ActivityImageSerializer(serializers.ModelSerializer):
 
 class ActivitySerializer(serializers.ModelSerializer):
     category = ActivityCategorySerializer(read_only=True)
+    category_id = serializers.PrimaryKeyRelatedField(
+        source='category',
+        queryset=ActivityCategory.objects.all(),
+        write_only=True
+    )
     tags = TagSerializer(many=True, read_only=True)
     farmer = UserSerializer(read_only=True)
     images = ActivityImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Activity
-        fields = ['id', 'title', 'slug', 'description', 'start_time', 'end_time', 'location', 'category', 'tags', 'cover_image', 'max_participants', 'farmer', 'created_at', 'updated_at', 'images']
+        fields = ['id', 'title', 'slug', 'description', 'start_time', 'end_time', 'location', 
+                 'category', 'category_id', 'tags', 'cover_image', 'max_participants', 
+                 'status', 'farmer', 'created_at', 'updated_at', 'images']
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at', 'farmer', 'images']
+    
+    def validate(self, data):
+        """
+        额外的验证以确保category被设置
+        """
+        if 'category' not in data:
+            raise serializers.ValidationError({"category": "活动分类不能为空"})
+        return data
+    
+    def create(self, validated_data):
+        """
+        自定义创建方法，确保category被正确设置
+        """
+        tags_data = validated_data.pop('tags', [])
+        instance = Activity.objects.create(**validated_data)
+        
+        # 添加标签
+        if tags_data:
+            instance.tags.set(tags_data)
+            
+        return instance
 
 class ReservationSerializer(serializers.ModelSerializer):
     activity = ActivitySerializer(read_only=True)
@@ -88,4 +116,4 @@ class ActivityCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityComment
         fields = ['id', 'user', 'content_type', 'object_id', 'text', 'created_at']
-        read_only_fields = ['id', 'created_at', 'user''auto_reply', 'content_type', 'object_id']
+        read_only_fields = ['id', 'created_at', 'user', 'auto_reply', 'content_type', 'object_id']

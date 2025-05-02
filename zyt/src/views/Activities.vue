@@ -175,7 +175,15 @@ onMounted(() => {
   <div class="activities-page">
     <div class="page-header">
       <h1 class="page-title">乡村活动</h1>
-      <p class="page-subtitle">探索丰富多彩的乡村体验活动，感受农耕文化的魅力</p>
+      <p class="page-subtitle">体验独特的乡村活动，感受田园生活的魅力</p>
+      
+      <div class="role-notice">
+        <el-alert type="info" show-icon :closable="false">
+          <template #title>
+            <span>注意：乡村活动由农户用户发布，游客用户可以浏览和预约活动。如果您是农户，可以在<router-link to="/farmer/dashboard" class="alert-link">农户管理中心</router-link>发布活动。</span>
+          </template>
+        </el-alert>
+      </div>
     </div>
 
     <!-- 搜索区域 -->

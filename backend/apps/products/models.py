@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
+from django.utils.text import slugify
+from django.utils.crypto import get_random_string
 
 class Product(models.Model):
     """
@@ -33,9 +35,23 @@ class Product(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        if not self.slug:
-            from django.utils.text import slugify
-            self.slug = slugify(self.name)
+        # 确保slug不为空
+        if not self.slug and self.name:
+            # 生成基础slug
+            base_slug = slugify(self.name)
+            if not base_slug:
+                # 如果名称不能生成有效的slug（例如全中文名称），则使用随机字符串
+                base_slug = 'product-' + get_random_string(8)
+            
+            # 检查是否已存在相同的slug
+            existing_slugs = Product.objects.filter(slug__startswith=base_slug).values_list('slug', flat=True)
+            if base_slug in existing_slugs:
+                # 如果存在，添加随机后缀
+                random_suffix = get_random_string(4)
+                self.slug = f"{base_slug}-{random_suffix}"
+            else:
+                self.slug = base_slug
+        
         super().save(*args, **kwargs)
 
 class ProductImage(models.Model):

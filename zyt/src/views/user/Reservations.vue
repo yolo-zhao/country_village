@@ -94,7 +94,13 @@ onMounted(() => {
 
 <template>
   <div class="reservations-page">
-    <h1 class="page-title">我的预约</h1>
+    <h1 class="page-title">游客活动预约管理</h1>
+    
+    <div class="tourist-info">
+      <el-alert type="success" show-icon :closable="false">
+        <strong>游客预约管理!</strong> 在这里您可以查看和管理您的乡村活动预约情况。
+      </el-alert>
+    </div>
     
     <el-skeleton :rows="5" animated v-if="loading" />
     

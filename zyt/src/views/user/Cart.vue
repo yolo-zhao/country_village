@@ -182,7 +182,13 @@ const formatPrice = (price) => {
 
 <template>
   <div class="cart-page">
-    <h1 class="page-title">我的购物车</h1>
+    <h1 class="page-title">游客购物车</h1>
+    
+    <div class="tourist-info">
+      <el-alert type="success" show-icon :closable="false">
+        <strong>游客购物管理!</strong> 在这里您可以管理您添加到购物车的乡村特产商品。
+      </el-alert>
+    </div>
     
     <el-skeleton :rows="5" animated v-if="loading" />
     

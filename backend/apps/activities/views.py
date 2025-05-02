@@ -12,6 +12,7 @@ from django.contrib.contenttypes.models import ContentType
 from .models import ActivityCategory, Tag, Activity, ActivityImage, Reservation, ActivityReview, ActivityPhoto, ActivityCheckIn, ActivityLike, ActivityComment
 from .serializers import ActivityCategorySerializer, TagSerializer, ActivitySerializer, ActivityImageSerializer, ReservationSerializer, ActivityReviewSerializer, ActivityPhotoSerializer, ActivityCheckInSerializer, ActivityLikeSerializer, ActivityCommentSerializer
 from rest_framework import serializers
+from rest_framework import status
 
 class ActivityCategoryViewSet(viewsets.ModelViewSet):
     queryset = ActivityCategory.objects.all()
@@ -29,7 +30,51 @@ class ActivityViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
-        serializer.save(farmer=self.request.user)
+        # 获取并处理分类ID
+        category_id = self.request.data.get('category_id')
+        if not category_id and 'category' in self.request.data:
+            category_id = self.request.data.get('category')
+        
+        # 调试日志
+        print(f"创建活动，接收到的分类ID: {category_id}, 类型: {type(category_id)}")
+        
+        try:
+            # 尝试获取分类对象
+            if category_id:
+                category = ActivityCategory.objects.get(id=category_id)
+                serializer.save(farmer=self.request.user, category=category)
+            else:
+                # 如果没有分类ID，将引发验证错误
+                serializer.save(farmer=self.request.user)
+        except ActivityCategory.DoesNotExist:
+            # 分类不存在
+            raise serializers.ValidationError({"category": f"ID为{category_id}的活动分类不存在"})
+        except Exception as e:
+            # 其他异常
+            print(f"创建活动时发生错误: {str(e)}")
+            raise
+
+    def update(self, request, *args, **kwargs):
+        # 调试日志
+        print(f"更新活动，接收到的数据: {request.data}")
+        
+        # 获取并处理分类ID
+        category_id = request.data.get('category_id')
+        if not category_id and 'category' in request.data:
+            category_id = request.data.get('category')
+            
+        # 确保category_id是有效的
+        if category_id:
+            try:
+                # 验证分类ID存在
+                ActivityCategory.objects.get(id=category_id)
+            except ActivityCategory.DoesNotExist:
+                return Response(
+                    {"category": f"ID为{category_id}的活动分类不存在"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        return super().update(request, *args, **kwargs)
 
 class ActivityImageViewSet(viewsets.ModelViewSet):
     queryset = ActivityImage.objects.all()

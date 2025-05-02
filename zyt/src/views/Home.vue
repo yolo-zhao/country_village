@@ -81,18 +81,71 @@ onMounted(() => {
     <!-- 顶部横幅 -->
     <section class="hero-section">
       <div class="hero-content">
-        <h1>探索美丽乡村，体验农耕文化</h1>
-        <p>深入乡村，近距离感受农耕魅力，寻找城市中失去的宁静与自然</p>
-        <div class="hero-buttons">
-          <RouterLink to="/activities">
-            <el-button type="primary" size="large">查看乡村活动</el-button>
-          </RouterLink>
-          <RouterLink to="/products">
-            <el-button type="success" size="large">浏览农产品</el-button>
-          </RouterLink>
+        <h1 class="hero-title">发现乡村之美</h1>
+        <p class="hero-subtitle">体验农村生活，品尝新鲜农产品，参与乡村活动</p>
+        
+        <div class="hero-actions">
+          <router-link to="/activities">
+            <el-button type="primary" size="large">
+              探索乡村活动
+            </el-button>
+          </router-link>
+          <router-link to="/products">
+            <el-button type="success" size="large">
+              浏览农产品
+            </el-button>
+          </router-link>
         </div>
       </div>
     </section>
+
+    <!-- 角色区分提示 -->
+    <div class="role-info-section">
+      <el-divider>用户角色说明</el-divider>
+      
+      <el-row :gutter="20">
+        <el-col :xs="24" :sm="12">
+          <el-card class="role-card">
+            <template #header>
+              <div class="card-header">
+                <h3>游客用户</h3>
+              </div>
+            </template>
+            <div class="role-features">
+              <p><el-icon><Check /></el-icon> 浏览所有乡村活动和农产品</p>
+              <p><el-icon><Check /></el-icon> 预约参加乡村活动</p>
+              <p><el-icon><Check /></el-icon> 购买农产品</p>
+              <p><el-icon><Check /></el-icon> 评价活动和产品</p>
+              <p><el-icon><Close /></el-icon> 无法发布活动和产品</p>
+            </div>
+          </el-card>
+        </el-col>
+        
+        <el-col :xs="24" :sm="12">
+          <el-card class="role-card">
+            <template #header>
+              <div class="card-header">
+                <h3>农户用户</h3>
+              </div>
+            </template>
+            <div class="role-features">
+              <p><el-icon><Check /></el-icon> 发布乡村活动</p>
+              <p><el-icon><Check /></el-icon> 发布农产品</p>
+              <p><el-icon><Check /></el-icon> 管理活动预约</p>
+              <p><el-icon><Check /></el-icon> 管理产品销售</p>
+              <p><el-icon><Check /></el-icon> 查看活动和产品统计数据</p>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+      
+      <div class="register-cta">
+        <p>还没有账号？立即注册选择您的角色！</p>
+        <router-link to="/register">
+          <el-button type="primary">注册账号</el-button>
+        </router-link>
+      </div>
+    </div>
 
     <!-- 我们的特色 -->
     <section class="features-section">
@@ -263,7 +316,7 @@ onMounted(() => {
   margin-bottom: 30px;
 }
 
-.hero-buttons {
+.hero-actions {
   display: flex;
   gap: 15px;
   justify-content: center;
@@ -411,5 +464,59 @@ onMounted(() => {
   .feature-item {
     min-width: 100%;
   }
+}
+
+.role-info-section {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.role-card {
+  height: 100%;
+  margin-bottom: 20px;
+}
+
+.role-features {
+  text-align: left;
+}
+
+.role-features p {
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+}
+
+.role-features .el-icon {
+  margin-right: 10px;
+}
+
+.role-features .el-icon.Check {
+  color: #67C23A;
+}
+
+.role-features .el-icon.Close {
+  color: #F56C6C;
+}
+
+.register-cta {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.register-cta p {
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+}
+
+.card-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
 }
 </style> 

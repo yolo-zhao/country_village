@@ -172,6 +172,14 @@ onMounted(() => {
     <div class="page-header">
       <h1 class="page-title">农产品</h1>
       <p class="page-subtitle">精选新鲜农产品，从田间到餐桌的美味享受</p>
+      
+      <div class="role-notice">
+        <el-alert type="info" show-icon :closable="false">
+          <template #title>
+            <span>注意：农产品由农户用户发布，游客用户可以浏览和购买产品。如果您是农户，可以在<router-link to="/farmer/dashboard" class="alert-link">农户管理中心</router-link>发布产品。</span>
+          </template>
+        </el-alert>
+      </div>
     </div>
 
     <!-- 搜索区域 -->

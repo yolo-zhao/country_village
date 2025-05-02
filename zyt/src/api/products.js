@@ -79,7 +79,10 @@ export const productApi = {
   
   // 获取农场主发布的产品
   getFarmerProducts() {
-    return http.get('/farmer-products/')
+    // 农户/farmer-products/端点不存在，使用通用产品端点并添加查询参数
+    return http.get('/products/', {
+      params: { farmer: 'me' }
+    })
   },
   
   // 创建新产品
