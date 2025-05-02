@@ -21,6 +21,9 @@ urlpatterns = [
     path('cart/items/<int:item_id>/', views.CartItemOperationView.as_view(), name='cart-item-operation'),
     path('cart/items/', views.CartItemsView.as_view(), name='cart-items'),
     
+    # 文件上传接口
+    path('upload/', views.FileUploadView.as_view(), name='file-upload'),
+    
     # 新增接口
     path('search/', views.ProductSearchView.as_view(), name='product-search'),
     path('recommendations/', views.ProductRecommendationsView.as_view(), name='product-recommendations'),

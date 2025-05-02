@@ -59,7 +59,8 @@ class ProductImage(models.Model):
     农特产品图片
     """
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='products/images/')
+    image = models.ImageField(upload_to='products/images/')  # 保持原有的ImageField
+    image_url = models.CharField(max_length=500, blank=True, null=True)  # 添加URL字段，支持外部URL
     caption = models.CharField(max_length=200, blank=True, null=True)
 
     class Meta:
@@ -68,6 +69,18 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return self.caption or self.image.name
+        
+    def get_image_url(self):
+        """返回图片URL，优先使用image_url字段"""
+        if self.image_url:
+            # 如果已经是完整URL，直接返回
+            if self.image_url.startswith('http://') or self.image_url.startswith('https://'):
+                return self.image_url
+            # 否则添加域名
+            return f"/media/{self.image_url}"
+        if self.image and hasattr(self.image, 'url'):
+            return self.image.url
+        return ""
 
 class ProductInquiry(models.Model):
     """

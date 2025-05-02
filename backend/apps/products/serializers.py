@@ -11,9 +11,15 @@ class UserSerializer(serializers.ModelSerializer):
         ref_name = 'ProductUserSerializer'  # 添加唯一的ref_name
 #产品图片
 class ProductImageSerializer(serializers.ModelSerializer):
+    image_display_url = serializers.SerializerMethodField()
+
     class Meta:
         model = ProductImage
-        fields = ['id', 'image', 'caption']
+        fields = ['id', 'image', 'image_url', 'image_display_url', 'caption']
+        
+    def get_image_display_url(self, obj):
+        """返回用于显示的图片URL"""
+        return obj.get_image_url() or (obj.image.url if obj.image else "")
 #产品
 class ProductSerializer(serializers.ModelSerializer):
     farmer = UserSerializer(read_only=True) # 显示农场主信息

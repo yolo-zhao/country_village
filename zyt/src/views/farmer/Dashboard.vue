@@ -48,6 +48,14 @@ const fetchFarmerProducts = async () => {
   try {
     const response = await productApi.getFarmerProducts()
     products.value = response.data || []
+    
+    // 添加调试信息
+    console.log('获取到产品列表:', products.value);
+    if (products.value.length > 0) {
+      console.log('第一个产品详情:', products.value[0]);
+      console.log('产品状态:', products.value[0].status);
+      console.log('产品图片:', products.value[0].images);
+    }
   } catch (error) {
     console.error('获取产品列表失败:', error)
     ElMessage.error('获取产品列表失败')
@@ -137,6 +145,88 @@ onMounted(() => {
   fetchFarmerActivities()
   fetchFarmerProducts()
 })
+
+// 辅助函数：获取产品图片URL
+const getImageUrl = (row) => {
+  if (row.images && row.images.length > 0) {
+    // 检查并确保URL格式正确
+    let url = row.images[0].image_display_url || row.images[0].image_url || row.images[0].image;
+    // 如果URL是完整的HTTP(S)链接，直接使用
+    if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+      return url;
+    } 
+    // 如果URL是相对路径，添加后端域名
+    else if (url && !url.startsWith('/media/http')) {
+      // 如果URL已经包含/media/前缀，则直接使用后端域名
+      if (url.startsWith('/media/')) {
+        return `http://localhost:8000${url}`;
+      } else {
+        return `http://localhost:8000/media/${url}`;
+      }
+    }
+    // 处理错误格式的URL
+    else if (url && url.includes('localhost:8000')) {
+      // 提取正确的部分
+      const match = url.match(/http:\/\/localhost:8000(\/media\/.*)/);
+      if (match && match[1]) {
+        return `http://localhost:8000${match[1]}`;
+      }
+    }
+  }
+  
+  // 处理封面图片
+  if (row.cover_image) {
+    if (row.cover_image.startsWith('http://') || row.cover_image.startsWith('https://')) {
+      return row.cover_image;
+    } else {
+      return `http://localhost:8000/media/${row.cover_image}`;
+    }
+  }
+  
+  // 默认图片
+  return 'https://via.placeholder.com/50x50?text=暂无图片';
+}
+
+// 辅助函数：获取产品预览图片列表
+const getPreviewImageUrls = (row) => {
+  if (row.images && row.images.length > 0) {
+    return row.images.map(img => {
+      let url = img.image_display_url || img.image_url || img.image;
+      
+      // 处理完整URL
+      if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+        return url;
+      } 
+      // 处理相对路径
+      else if (url && !url.startsWith('/media/http')) {
+        if (url.startsWith('/media/')) {
+          return `http://localhost:8000${url}`;
+        } else {
+          return `http://localhost:8000/media/${url}`;
+        }
+      }
+      // 处理错误格式的URL
+      else if (url && url.includes('localhost:8000')) {
+        const match = url.match(/http:\/\/localhost:8000(\/media\/.*)/);
+        if (match && match[1]) {
+          return `http://localhost:8000${match[1]}`;
+        }
+      }
+      return null;
+    }).filter(Boolean);
+  } 
+  
+  // 处理封面图片
+  if (row.cover_image) {
+    if (row.cover_image.startsWith('http://') || row.cover_image.startsWith('https://')) {
+      return [row.cover_image];
+    } else {
+      return [`http://localhost:8000/media/${row.cover_image}`];
+    }
+  }
+  
+  return [];
+}
 </script>
 
 <template>
@@ -256,10 +346,18 @@ onMounted(() => {
           <el-table-column label="产品图片" width="100">
             <template #default="{ row }">
               <el-image 
-                :src="row.images && row.images.length > 0 ? row.images[0].image : 'https://via.placeholder.com/50x50'"
+                :src="getImageUrl(row)"
                 style="width: 50px; height: 50px"
                 fit="cover"
-              />
+                :preview-src-list="getPreviewImageUrls(row)"
+              >
+                <template #error>
+                  <div class="image-error">
+                    <el-icon><Picture /></el-icon>
+                    <span>加载失败</span>
+                  </div>
+                </template>
+              </el-image>
             </template>
           </el-table-column>
           
@@ -282,11 +380,14 @@ onMounted(() => {
           <el-table-column label="状态" width="100">
             <template #default="{ row }">
               <el-tag 
-                :type="row.status === 'available' ? 'success' : 
-                      (row.status === 'sold_out' ? 'danger' : 'info')"
+                :type="row.status === 'published' ? 'success' : 
+                      (row.status === 'sold_out' ? 'danger' : 
+                      (row.status === 'unavailable' ? 'info' : 'warning'))"
               >
-                {{ row.status === 'available' ? '在售' : 
-                   (row.status === 'sold_out' ? '售罄' : '已下架') }}
+                {{ row.status === 'published' ? '已上架' : 
+                   (row.status === 'sold_out' ? '售罄' : 
+                   (row.status === 'unavailable' ? '已下架' : 
+                   (row.status === 'draft' ? '草稿' : row.status))) }}
               </el-tag>
             </template>
           </el-table-column>
@@ -359,5 +460,12 @@ onMounted(() => {
 .empty-data {
   margin: 50px 0;
   text-align: center;
+}
+
+.image-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 </style> 

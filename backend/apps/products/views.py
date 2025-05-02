@@ -125,17 +125,106 @@ class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
-        serializer.save(farmer=self.request.user)
-
-    @action(detail=True, methods=['POST'])
-    def upload_image(self, request, pk=None):
-        product = self.get_object()
-        serializer = ProductImageSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(product=product)
-            return Response(serializer.data)
-        else:
-            return Response(serializer.errors, status=400)
+        # 保存产品信息
+        product = serializer.save(farmer=self.request.user)
+        
+        # 处理图片数据
+        images_data = self.request.data.get('images', [])
+        if isinstance(images_data, list) and images_data:
+            for image_data in images_data:
+                # 从image_data获取image和image_url
+                image_file = None
+                image_url = None
+                caption = '产品图片'
+                
+                if isinstance(image_data, dict):
+                    if 'image' in image_data and image_data['image'] and not image_data['image'].startswith('http'):
+                        image_file = image_data.get('image')
+                    elif 'image' in image_data and image_data['image'] and image_data['image'].startswith('http'):
+                        # 如果是完整URL，应该存储在image_url字段中
+                        image_url = image_data.get('image')
+                    if 'image_url' in image_data:
+                        image_url = image_data.get('image_url')
+                    if 'caption' in image_data:
+                        caption = image_data.get('caption') or caption
+                elif isinstance(image_data, str):
+                    # 如果只是字符串，则视为image_url
+                    if image_data.startswith('http'):
+                        image_url = image_data
+                
+                # 创建图片记录
+                if image_url and image_url.startswith('http'):
+                    # 如果是完整URL，则存储到image_url字段
+                    ProductImage.objects.create(
+                        product=product,
+                        image_url=image_url,
+                        caption=caption
+                    )
+                elif image_file and not isinstance(image_file, str):
+                    # 如果是文件对象，则存储到image字段
+                    ProductImage.objects.create(
+                        product=product,
+                        image=image_file,
+                        caption=caption
+                    )
+        
+        # 如果前端直接发送了图片文件列表
+        images_files = self.request.FILES.getlist('images')
+        if images_files:
+            for image_file in images_files:
+                ProductImage.objects.create(
+                    product=product,
+                    image=image_file
+                )
+    
+    def perform_update(self, serializer):
+        # 保存产品信息
+        product = serializer.save()
+        
+        # 处理图片数据
+        images_data = self.request.data.get('images', [])
+        if isinstance(images_data, list) and images_data:
+            for image_data in images_data:
+                # 从image_data获取image和image_url
+                image_file = None
+                image_url = None
+                caption = '产品图片'
+                
+                if isinstance(image_data, dict):
+                    if 'image' in image_data and image_data['image'] and not image_data['image'].startswith('http'):
+                        image_file = image_data.get('image')
+                    elif 'image' in image_data and image_data['image'] and image_data['image'].startswith('http'):
+                        # 如果是完整URL，应该存储在image_url字段中
+                        image_url = image_data.get('image')
+                    if 'image_url' in image_data:
+                        image_url = image_data.get('image_url')
+                    if 'caption' in image_data:
+                        caption = image_data.get('caption') or caption
+                elif isinstance(image_data, str):
+                    # 如果只是字符串，则视为image_url
+                    if image_data.startswith('http'):
+                        image_url = image_data
+                    
+                # 检查是否需要创建新图片
+                if image_url and image_url.startswith('http'):
+                    # 检查是否已存在该URL的图片
+                    if not ProductImage.objects.filter(
+                        product=product,
+                        image_url=image_url
+                    ).exists():
+                        # 创建新图片记录
+                        ProductImage.objects.create(
+                            product=product,
+                            image_url=image_url,
+                            caption=caption
+                        )
+                elif image_file and not isinstance(image_file, str):
+                    # 如果是文件对象，则存储到image字段
+                    ProductImage.objects.create(
+                        product=product,
+                        image=image_file,
+                        caption=caption
+                    )
 
 class ProductImageViewSet(viewsets.ModelViewSet):
     queryset = ProductImage.objects.all()
@@ -452,3 +541,43 @@ class CartItemsView(APIView):
             cart.items.all().delete()
             return Response({'message': 'Cart cleared successfully'})
         return Response({'message': 'No cart found'})
+
+class FileUploadView(APIView):
+    """
+    通用文件上传API
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request):
+        """处理文件上传请求"""
+        if 'file' not in request.FILES:
+            return Response({'error': '没有提供文件'}, status=400)
+            
+        file = request.FILES['file']
+        # 处理文件路径
+        # 这里可以根据文件类型创建不同的目录
+        if file.content_type.startswith('image/'):
+            # 图片存储到media/uploads/images/下
+            upload_path = 'uploads/images/'
+        else:
+            # 其他文件存储到media/uploads/files/下
+            upload_path = 'uploads/files/'
+            
+        from django.core.files.storage import default_storage
+        from django.core.files.base import ContentFile
+        
+        # 生成唯一的文件名
+        import uuid
+        file_name = f"{uuid.uuid4().hex}{file.name[file.name.rfind('.'):]}"
+        path = default_storage.save(f"{upload_path}{file_name}", ContentFile(file.read()))
+        
+        # 返回文件的完整URL
+        from django.conf import settings
+        file_url = request.build_absolute_uri(settings.MEDIA_URL + path)
+        
+        return Response({
+            'url': file_url,
+            'name': file.name,
+            'type': file.content_type,
+            'size': file.size
+        })

@@ -99,15 +99,33 @@ const submitForm = async () => {
       submitLoading.value = true
       try {
         // 准备图片数据
-        const imagesData = fileList.value.map(file => ({
-          image: file.url,
-          caption: file.name
-        }))
+        const imagesData = fileList.value
+          .filter(file => file && file.url) // 过滤掉空URL
+          .map(file => {
+            // 检查URL是否是HTTP(S)链接
+            const isHttpUrl = typeof file.url === 'string' && 
+                          (file.url.startsWith('http://') || file.url.startsWith('https://'));
+            
+            // 区分URL和文件
+            if (file.is_url || isHttpUrl) {
+              return {
+                image_url: file.url,
+                caption: file.name
+              }
+            } else {
+              return {
+                image: file.url,
+                caption: file.name
+              }
+            }
+          });
         
         const submitData = {
           ...productForm,
           images: imagesData
         }
+        
+        console.log('提交的产品数据:', submitData);
         
         if (isEditMode.value) {
           // 编辑产品
@@ -148,11 +166,47 @@ const cancelForm = () => {
 
 // 上传图片成功
 const handleUploadSuccess = (res) => {
-  productForm.images.push(res.url)
-  fileList.value.push({
-    name: '产品图片',
-    url: res.url
-  })
+  console.log('图片上传成功:', res);
+  
+  // 添加调试日志
+  if (res && res.url) {
+    console.log('获取到图片URL:', res.url);
+  } else if (res && res.data && res.data.url) {
+    console.log('从data中获取图片URL:', res.data.url);
+  } else {
+    console.warn('未能找到有效的图片URL:', res);
+  }
+  
+  let imageUrl = '';
+  if (res && res.url) {
+    imageUrl = res.url;
+  } else if (res && res.data && res.data.url) {
+    imageUrl = res.data.url;
+  }
+  
+  if (imageUrl) {
+    // 确保URL格式正确
+    if (imageUrl.startsWith('/media/')) {
+      // 如果是相对路径，不需要前缀
+      imageUrl = imageUrl.substring(7); // 移除 /media/ 前缀
+    } else if (imageUrl.includes('/media/')) {
+      // 尝试提取media后的路径
+      const match = imageUrl.match(/\/media\/(.*)/);
+      if (match && match[1]) {
+        imageUrl = match[1];
+      }
+    }
+    
+    // 使用image_url字段存储完整URL
+    fileList.value.push({
+      name: res.name || '产品图片',
+      url: imageUrl,
+      is_url: true  // 标记这是一个URL，不是文件对象
+    });
+    console.log('当前图片列表:', fileList.value);
+  } else {
+    ElMessage.warning('图片上传成功，但无法获取图片URL');
+  }
 }
 
 // 移除图片
