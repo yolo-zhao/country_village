@@ -11,6 +11,7 @@ export default defineConfig({
     }
   },
   server: {
+    host: '0.0.0.0',   // <== 必须添加，让 Vite 监听所有地址
     port: 8080,
     proxy: {
       // 代理API请求到Django后端
