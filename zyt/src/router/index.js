@@ -93,6 +93,16 @@ const routes = [
     path: '/ai-assistant',
     name: 'AIAssistant',
     component: () => import('../views/AIAssistant.vue')
+  },
+  {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: () => import('../views/ForgotPassword.vue')
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('../views/NotFound.vue')
   }
 ]
 
