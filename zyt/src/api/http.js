@@ -1,8 +1,10 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
-// 根据错误情况，尝试不同的API基础路径
-const API_URL = 'http://localhost:8000/api'
+// 根据环境选择API基础路径
+const API_URL = 'http://118.178.232.89:8000/api'
+// 本地开发时可以切换为：
+// const API_URL = 'http://localhost:8000/api'
 
 const http = axios.create({
   baseURL: API_URL,
