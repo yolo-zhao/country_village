@@ -118,6 +118,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db.models import Count, Q
 from rest_framework.permissions import IsAuthenticated
+import logging
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
@@ -128,38 +129,52 @@ class ProductViewSet(viewsets.ModelViewSet):
         # 保存产品信息
         product = serializer.save(farmer=self.request.user)
         
+        # 调试信息
+        logger = logging.getLogger(__name__)
+        logger.info(f"正在创建产品: {product.id}, 图片数据: {self.request.data.get('images')}")
+        
         # 处理图片数据
         images_data = self.request.data.get('images', [])
         if isinstance(images_data, list) and images_data:
             for image_data in images_data:
+                # 记录处理的每条图片数据
+                logger.info(f"处理图片数据: {image_data}")
+                
                 # 从image_data获取image和image_url
                 image_file = None
                 image_url = None
                 caption = '产品图片'
                 
                 if isinstance(image_data, dict):
-                    if 'image' in image_data and image_data['image'] and not image_data['image'].startswith('http'):
+                    # 优先检查image_url字段
+                    if 'image_url' in image_data and image_data['image_url']:
+                        image_url = image_data.get('image_url')
+                        logger.info(f"从image_url字段提取URL: {image_url}")
+                    elif 'image' in image_data and image_data['image'] and not image_data['image'].startswith('http'):
                         image_file = image_data.get('image')
+                        logger.info(f"从image字段提取文件: {image_file}")
                     elif 'image' in image_data and image_data['image'] and image_data['image'].startswith('http'):
                         # 如果是完整URL，应该存储在image_url字段中
                         image_url = image_data.get('image')
-                    if 'image_url' in image_data:
-                        image_url = image_data.get('image_url')
+                        logger.info(f"从image字段提取URL: {image_url}")
                     if 'caption' in image_data:
                         caption = image_data.get('caption') or caption
                 elif isinstance(image_data, str):
                     # 如果只是字符串，则视为image_url
                     if image_data.startswith('http'):
                         image_url = image_data
+                        logger.info(f"从字符串提取URL: {image_url}")
                 
                 # 创建图片记录
                 if image_url and image_url.startswith('http'):
+                    logger.info(f"准备创建URL图片: {image_url}")
                     # 如果是完整URL，则存储到image_url字段
                     ProductImage.objects.create(
                         product=product,
                         image_url=image_url,
                         caption=caption
                     )
+                    logger.info(f"已创建URL图片记录: {image_url}")
                 elif image_file and not isinstance(image_file, str):
                     # 如果是文件对象，则存储到image字段
                     ProductImage.objects.create(
@@ -167,46 +182,62 @@ class ProductViewSet(viewsets.ModelViewSet):
                         image=image_file,
                         caption=caption
                     )
+                    logger.info(f"已创建文件图片记录")
         
         # 如果前端直接发送了图片文件列表
         images_files = self.request.FILES.getlist('images')
         if images_files:
+            logger.info(f"处理直接上传的图片文件: {len(images_files)}个")
             for image_file in images_files:
                 ProductImage.objects.create(
                     product=product,
                     image=image_file
                 )
+                logger.info(f"已创建文件图片记录: {image_file.name}")
     
     def perform_update(self, serializer):
         # 保存产品信息
         product = serializer.save()
         
+        # 调试信息
+        logger = logging.getLogger(__name__)
+        logger.info(f"正在更新产品: {product.id}, 图片数据: {self.request.data.get('images')}")
+        
         # 处理图片数据
         images_data = self.request.data.get('images', [])
         if isinstance(images_data, list) and images_data:
             for image_data in images_data:
+                # 记录处理的每条图片数据
+                logger.info(f"处理图片数据: {image_data}")
+                
                 # 从image_data获取image和image_url
                 image_file = None
                 image_url = None
                 caption = '产品图片'
                 
                 if isinstance(image_data, dict):
-                    if 'image' in image_data and image_data['image'] and not image_data['image'].startswith('http'):
+                    # 优先检查image_url字段
+                    if 'image_url' in image_data and image_data['image_url']:
+                        image_url = image_data.get('image_url')
+                        logger.info(f"从image_url字段提取URL: {image_url}")
+                    elif 'image' in image_data and image_data['image'] and not image_data['image'].startswith('http'):
                         image_file = image_data.get('image')
+                        logger.info(f"从image字段提取文件: {image_file}")
                     elif 'image' in image_data and image_data['image'] and image_data['image'].startswith('http'):
                         # 如果是完整URL，应该存储在image_url字段中
                         image_url = image_data.get('image')
-                    if 'image_url' in image_data:
-                        image_url = image_data.get('image_url')
+                        logger.info(f"从image字段提取URL: {image_url}")
                     if 'caption' in image_data:
                         caption = image_data.get('caption') or caption
                 elif isinstance(image_data, str):
                     # 如果只是字符串，则视为image_url
                     if image_data.startswith('http'):
                         image_url = image_data
+                        logger.info(f"从字符串提取URL: {image_url}")
                     
                 # 检查是否需要创建新图片
                 if image_url and image_url.startswith('http'):
+                    logger.info(f"准备创建URL图片: {image_url}")
                     # 检查是否已存在该URL的图片
                     if not ProductImage.objects.filter(
                         product=product,
@@ -218,6 +249,9 @@ class ProductViewSet(viewsets.ModelViewSet):
                             image_url=image_url,
                             caption=caption
                         )
+                        logger.info(f"已创建URL图片记录: {image_url}")
+                    else:
+                        logger.info(f"URL图片已存在，不重复创建: {image_url}")
                 elif image_file and not isinstance(image_file, str):
                     # 如果是文件对象，则存储到image字段
                     ProductImage.objects.create(
@@ -225,6 +259,7 @@ class ProductViewSet(viewsets.ModelViewSet):
                         image=image_file,
                         caption=caption
                     )
+                    logger.info(f"已创建文件图片记录")
 
 class ProductImageViewSet(viewsets.ModelViewSet):
     queryset = ProductImage.objects.all()

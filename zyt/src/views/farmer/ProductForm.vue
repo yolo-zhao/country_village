@@ -102,6 +102,7 @@ const submitForm = async () => {
         const imagesData = fileList.value
           .filter(file => file && file.url) // 过滤掉空URL
           .map(file => {
+            console.log('处理图片:', file);
             // 检查URL是否是HTTP(S)链接
             const isHttpUrl = typeof file.url === 'string' && 
                           (file.url.startsWith('http://') || file.url.startsWith('https://'));
@@ -119,6 +120,8 @@ const submitForm = async () => {
               }
             }
           });
+        
+        console.log('准备提交的图片数据:', imagesData);
         
         const submitData = {
           ...productForm,
@@ -185,17 +188,7 @@ const handleUploadSuccess = (res) => {
   }
   
   if (imageUrl) {
-    // 确保URL格式正确
-    if (imageUrl.startsWith('/media/')) {
-      // 如果是相对路径，不需要前缀
-      imageUrl = imageUrl.substring(7); // 移除 /media/ 前缀
-    } else if (imageUrl.includes('/media/')) {
-      // 尝试提取media后的路径
-      const match = imageUrl.match(/\/media\/(.*)/);
-      if (match && match[1]) {
-        imageUrl = match[1];
-      }
-    }
+    console.log('添加图片URL:', imageUrl);
     
     // 使用image_url字段存储完整URL
     fileList.value.push({
