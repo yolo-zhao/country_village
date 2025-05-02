@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API测试页面</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .test-section {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 4px;
+      overflow: auto;
+      margin-top: 15px;
+      max-height: 400px;
+    }
+  </style>
+</head>
+<body>
+  <h1>API测试页面</h1>
+  
+  <div class="test-section">
+    <h2>1. 测试活动API</h2>
+    <button onclick="fetchActivities()">获取活动列表</button>
+    <div id="activities-result"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>2. 测试产品API</h2>
+    <button onclick="fetchProducts()">获取产品列表</button>
+    <div id="products-result"></div>
+  </div>
+
+  <script>
+    // 活动API测试
+    function fetchActivities() {
+      const resultElem = document.getElementById('activities-result');
+      resultElem.innerHTML = '<p>加载中...</p>';
+      
+      fetch('http://localhost:8000/api/activities/')
+        .then(response => {
+          console.log('活动API响应状态:', response.status);
+          return response.json();
+        })
+        .then(data => {
+          console.log('活动数据:', data);
+          resultElem.innerHTML = `
+            <p>获取到 ${Array.isArray(data) ? data.length : 0} 条活动数据</p>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          `;
+        })
+        .catch(error => {
+          console.error('获取活动失败:', error);
+          resultElem.innerHTML = `<p style="color: red">错误: ${error.message}</p>`;
+        });
+    }
+    
+    // 产品API测试
+    function fetchProducts() {
+      const resultElem = document.getElementById('products-result');
+      resultElem.innerHTML = '<p>加载中...</p>';
+      
+      fetch('http://localhost:8000/api/products/')
+        .then(response => {
+          console.log('产品API响应状态:', response.status);
+          return response.json();
+        })
+        .then(data => {
+          console.log('产品数据:', data);
+          resultElem.innerHTML = `
+            <p>获取到 ${Array.isArray(data) ? data.length : 0} 条产品数据</p>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          `;
+        })
+        .catch(error => {
+          console.error('获取产品失败:', error);
+          resultElem.innerHTML = `<p style="color: red">错误: ${error.message}</p>`;
+        });
+    }
+  </script>
+</body>
+</html> 
