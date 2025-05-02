@@ -13,6 +13,81 @@ import json
 from datetime import datetime, timedelta
 from .models import SystemAnnouncement, Feedback, HelpArticle
 from .serializers import SystemAnnouncementSerializer, FeedbackSerializer, HelpArticleSerializer
+import logging
+import sys
+
+# 添加agent目录到系统路径
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'agent'))
+
+# 导入agent模块
+try:
+    from agent.graph_flow import build_graph
+    logger = logging.getLogger(__name__)
+    logger.info("成功导入AI助手模块")
+    AI_ASSISTANT_ENABLED = True
+except ImportError as e:
+    logger = logging.getLogger(__name__)
+    logger.error(f"导入AI助手模块失败: {str(e)}")
+    AI_ASSISTANT_ENABLED = False
+
+# 简单的备用AI响应生成器
+class SimpleFallbackAI:
+    """当AI助手模块不可用时的备用响应生成器"""
+    
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+        self.response_templates = {
+            "greeting": [
+                "您好！很高兴为您服务。",
+                "您好，有什么可以帮到您的吗？",
+                "欢迎使用乡村旅游平台客服。请问有什么可以帮您？"
+            ],
+            "farewell": [
+                "感谢您的咨询，再见！",
+                "很高兴能帮到您，祝您旅途愉快！",
+                "期待您的下次光临，再见！"
+            ],
+            "fallback": [
+                "抱歉，我目前无法回答这个问题。您可以尝试咨询其他问题或稍后再试。",
+                "这个问题有点复杂，建议您联系客服人员获取更准确的信息。",
+                "对不起，我还在学习中。这个问题我暂时回答不了。"
+            ]
+        }
+    
+    def respond_to(self, message):
+        """根据用户消息生成简单的响应"""
+        self.logger.info(f"备用AI响应: {message}")
+        
+        if any(word in message for word in ["你好", "您好", "早上好", "下午好", "晚上好", "嗨", "hi", "hello"]):
+            import random
+            return random.choice(self.response_templates["greeting"])
+        
+        if any(word in message for word in ["再见", "拜拜", "谢谢", "感谢", "bye", "thank"]):
+            import random
+            return random.choice(self.response_templates["farewell"])
+        
+        # 针对乡村旅游常见问题的简单回复
+        if "农产品" in message or "特产" in message:
+            return "我们的平台提供多种当地农特产品，您可以在产品页面浏览并购买。"
+        
+        if "活动" in message:
+            return "我们平台提供多种乡村体验活动，包括农耕体验、采摘活动等，您可以在活动页面查看详情并预约。"
+        
+        if "价格" in message or "费用" in message:
+            return "不同活动和产品的价格各不相同，您可以在具体的活动或产品页面查看详细价格信息。"
+        
+        if "预订" in message or "预约" in message or "怎么订" in message:
+            return "您可以在活动详情页点击'立即预约'按钮，填写相关信息后提交预约。我们会尽快处理您的请求。"
+        
+        if "退款" in message or "取消" in message:
+            return "如需取消预约或退款，请在'我的订单'中找到相应订单，点击'申请取消'或'申请退款'按钮。"
+        
+        # 默认回复
+        import random
+        return random.choice(self.response_templates["fallback"])
+
+# 创建备用AI实例
+fallback_ai = SimpleFallbackAI()
 
 class SystemAnnouncementViewSet(viewsets.ModelViewSet):
     queryset = SystemAnnouncement.objects.all().order_by('-created_at')
@@ -285,3 +360,93 @@ class GlobalSearchView(APIView):
             'help_articles': HelpArticleSerializer(help_articles, many=True).data,
             'users': users
         })
+
+class AIAssistantView(APIView):
+    """
+    AI助手API接口
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.sessions = {}  # 存储用户会话
+        if AI_ASSISTANT_ENABLED:
+            try:
+                self.app = build_graph()
+                logger.info("AI助手流程图构建成功")
+            except Exception as e:
+                logger.error(f"AI助手流程图构建失败: {str(e)}")
+                self.app = None
+    
+    def get(self, request):
+        """检查AI助手状态"""
+        if request.path.endswith('/status/'):
+            return Response({
+                "enabled": AI_ASSISTANT_ENABLED,
+                "available": AI_ASSISTANT_ENABLED and self.app is not None,
+                "sessions_count": len(self.sessions),
+                "user_has_session": request.user.id in self.sessions
+            })
+        return Response({"error": "不支持的请求"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    def post(self, request):
+        """处理用户对AI助手的请求"""
+        if not AI_ASSISTANT_ENABLED or not self.app:
+            # 使用备用AI响应
+            user_input = request.data.get('message', '')
+            if not user_input:
+                return Response({"error": "消息不能为空"}, status=status.HTTP_400_BAD_REQUEST)
+                
+            response = fallback_ai.respond_to(user_input)
+            logger.info(f"使用备用AI响应: '{user_input}' -> '{response}'")
+            
+            return Response({
+                "message": response,
+                "session_id": request.user.id,
+                "fallback": True
+            })
+            
+        user_id = request.user.id
+        user_input = request.data.get('message', '')
+        
+        if not user_input:
+            return Response({"error": "消息不能为空"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # 获取或创建用户会话
+        if user_id not in self.sessions:
+            self.sessions[user_id] = {
+                "input": "",
+                "output": "",
+                "next": "",
+                "history": []
+            }
+        
+        # 更新会话状态
+        session = self.sessions[user_id]
+        session["input"] = user_input
+        
+        try:
+            # 调用AI助手
+            logger.info(f"用户 {user_id} 发送消息: {user_input}")
+            result = self.app.invoke(session)
+            
+            # 更新会话历史
+            self.sessions[user_id]["history"] = result["history"]
+            
+            return Response({
+                "message": result["output"],
+                "session_id": user_id,
+                "fallback": False
+            })
+        except Exception as e:
+            logger.error(f"AI处理异常: {str(e)}")
+            # 在AI处理异常时也使用备用响应
+            response = fallback_ai.respond_to(user_input)
+            logger.info(f"异常后使用备用AI响应: '{user_input}' -> '{response}'")
+            
+            return Response({
+                "message": response,
+                "session_id": user_id,
+                "fallback": True,
+                "error": str(e)
+            }, status=status.HTTP_200_OK)
